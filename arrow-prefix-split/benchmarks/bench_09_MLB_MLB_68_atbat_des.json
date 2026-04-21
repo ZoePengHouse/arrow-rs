@@ -1,0 +1,122 @@
+{
+  "rank": 9,
+  "benchmark": "MLB",
+  "table": "MLB_68",
+  "column": "atbat_des",
+  "col_idx": 1,
+  "avg_len": 92.6,
+  "prefix_len": 6,
+  "psa_score": 82.2,
+  "queries": [
+    {
+      "id": 1,
+      "type": "Eq",
+      "label": "EQ 'Brett Pill doubles …'",
+      "values": [
+        "Brett Pill doubles (4) on a line drive to left fielder Matt Tuiasosopo."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 2,
+      "type": "Eq",
+      "label": "EQ 'Ed Lucas singles on…'",
+      "values": [
+        "Ed Lucas singles on a line drive to right fielder Tyler Henson.    Jose Constanza to 2nd."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 3,
+      "type": "Eq",
+      "label": "EQ 'Mike Rivera lines o…'",
+      "values": [
+        "Mike Rivera lines out to right fielder Brian Bogusevic."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 4,
+      "type": "Ne",
+      "label": "NE 'Ed Lucas singles on…'",
+      "values": [
+        "Ed Lucas singles on a line drive to right fielder Tyler Henson.    Jose Constanza to 2nd."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 5,
+      "type": "In",
+      "label": "IN(2) 'Chris Valaika singl…','Kieron Pope singles…'",
+      "values": [
+        "Chris Valaika singles on a line drive to left fielder Jerad Head.    Dave Sappelt scores.    Zack Cozart to 3rd.    Todd Frazier to 2nd.",
+        "Kieron Pope singles on a ground ball to left fielder Brady Shoemaker."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 6,
+      "type": "In",
+      "label": "IN(3) 'Brett Pill doubles …',…",
+      "values": [
+        "Brett Pill doubles (4) on a line drive to left fielder Matt Tuiasosopo.",
+        "Ed Lucas singles on a line drive to right fielder Tyler Henson.    Jose Constanza to 2nd.",
+        "Mike Rivera lines out to right fielder Brian Bogusevic."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 7,
+      "type": "In",
+      "label": "IN(5) 'Anthony Recker doub…',…",
+      "values": [
+        "Anthony Recker doubles (1) on a line drive to left fielder Eric Thames.    Steve Tolleson to 3rd.",
+        "Christian Vazquez singles on a ground ball to left fielder Rob Segedin.    Miles Head to 2nd.",
+        "Ed Lucas singles on a line drive to right fielder Tyler Henson.    Jose Constanza to 2nd.",
+        "Kevin Mort singles on a ground ball to second baseman Russell Wilson.    Mel Rojas scores.    Kevin Mort to 2nd.  Throwing error by second baseman Russell Wilson.",
+        "Zack Cozart singles on a line drive to right fielder Bubba Bell.    Daniel Dorn scores.    Kristopher Negron to 3rd.    Dave Sappelt to 2nd."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 8,
+      "type": "Range",
+      "label": "RANGE ['Christian Vazquez s…','Kevin Mort singles …']",
+      "values": [
+        "Christian Vazquez singles on a ground ball to left fielder Rob Segedin.    Miles Head to 2nd.",
+        "Kevin Mort singles on a ground ball to second baseman Russell Wilson.    Mel Rojas scores.    Kevin Mort to 2nd.  Throwing error by second baseman Russell Wilson."
+      ],
+      "low_inc": true,
+      "high_inc": true
+    },
+    {
+      "id": 9,
+      "type": "Range",
+      "label": "RANGE wide ['Brett Pill doubles …','Mike Rivera lines o…']",
+      "values": [
+        "Brett Pill doubles (4) on a line drive to left fielder Matt Tuiasosopo.",
+        "Mike Rivera lines out to right fielder Brian Bogusevic."
+      ],
+      "low_inc": true,
+      "high_inc": true
+    },
+    {
+      "id": 10,
+      "type": "Range",
+      "label": "RANGE >= 'Ed Lucas singles on…'",
+      "values": [
+        "Ed Lucas singles on a line drive to right fielder Tyler Henson.    Jose Constanza to 2nd.",
+        ""
+      ],
+      "low_inc": true,
+      "high_inc": false
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "rank": 2,
+  "benchmark": "Romance",
+  "table": "Romance_2",
+  "column": "caption",
+  "col_idx": 2,
+  "avg_len": 127.1,
+  "prefix_len": 3,
+  "psa_score": 117.9,
+  "queries": [
+    {
+      "id": 1,
+      "type": "Eq",
+      "label": "EQ '#birthdaymeat #date…'",
+      "values": [
+        "#birthdaymeat #datenight #tableforone"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 2,
+      "type": "Eq",
+      "label": "EQ 'Genuine happiness ♥…'",
+      "values": [
+        "Genuine happiness ♥ #love #happiness #datenight #MyManFuckingRULES #lovebirds #Bligsworth #babesworthforever #holidayparty #holidaycheer #HappyNewYear #SamuraiMessengerService #TheGrandBarandGrill #Williamsburg #Brooklyn #NYC #artandmusicareeverything #glaskwanfamilyposseclan #PhotoGrid #nicokwanart"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 3,
+      "type": "Eq",
+      "label": "EQ 'That's ok Whiskey F…'",
+      "values": [
+        "That's ok Whiskey Float! Go ahead and cover my face. Your delicious so it's ok! #grandbarandgrill #hellyes #datenight"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 4,
+      "type": "Ne",
+      "label": "NE 'Genuine happiness ♥…'",
+      "values": [
+        "Genuine happiness ♥ #love #happiness #datenight #MyManFuckingRULES #lovebirds #Bligsworth #babesworthforever #holidayparty #holidaycheer #HappyNewYear #SamuraiMessengerService #TheGrandBarandGrill #Williamsburg #Brooklyn #NYC #artandmusicareeverything #glaskwanfamilyposseclan #PhotoGrid #nicokwanart"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 5,
+      "type": "In",
+      "label": "IN(2) '#datenight wit #J','Shenanigans & pickl…'",
+      "values": [
+        "#datenight wit #J",
+        "Shenanigans & pickle backs after our #ValentinesDay dinner ☆ #LadyJays #shenanigans #picklebacks #whiskey #shots #HappyValentinesDay #birthintinesweek #MyManFuckingRULES #soulmates #love #loveandhappiness #truelove #horns #datenight #glaskwanfamilyposseclan #Williamsburg #Brooklyn #NYC #ILoveNYC #newhair #bluemohawk #blueismycolor #blue #nicokwanart #PhotoGrid"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 6,
+      "type": "In",
+      "label": "IN(3) '#birthdaymeat #date…',…",
+      "values": [
+        "#birthdaymeat #datenight #tableforone",
+        "Genuine happiness ♥ #love #happiness #datenight #MyManFuckingRULES #lovebirds #Bligsworth #babesworthforever #holidayparty #holidaycheer #HappyNewYear #SamuraiMessengerService #TheGrandBarandGrill #Williamsburg #Brooklyn #NYC #artandmusicareeverything #glaskwanfamilyposseclan #PhotoGrid #nicokwanart",
+        "That's ok Whiskey Float! Go ahead and cover my face. Your delicious so it's ok! #grandbarandgrill #hellyes #datenight"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 7,
+      "type": "In",
+      "label": "IN(5) '#Datenight at #dinn…',…",
+      "values": [
+        "#Datenight at #dinnerlab #williamsburgdining",
+        "#datenight with @juliaroven",
+        "Genuine happiness ♥ #love #happiness #datenight #MyManFuckingRULES #lovebirds #Bligsworth #babesworthforever #holidayparty #holidaycheer #HappyNewYear #SamuraiMessengerService #TheGrandBarandGrill #Williamsburg #Brooklyn #NYC #artandmusicareeverything #glaskwanfamilyposseclan #PhotoGrid #nicokwanart",
+        "Photo evidence: I can smile like a normal person in pictures. @meaghanmayhem is a cutie. #datenight #selfportraitproject",
+        "my honey introduced me to \"vegetable forward\" and this amazing port from Oliveira Madeira #datenight #happywoman #veggieforward"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 8,
+      "type": "Range",
+      "label": "RANGE ['#datenight with @ju…','Photo evidence: I c…']",
+      "values": [
+        "#datenight with @juliaroven",
+        "Photo evidence: I can smile like a normal person in pictures. @meaghanmayhem is a cutie. #datenight #selfportraitproject"
+      ],
+      "low_inc": true,
+      "high_inc": true
+    },
+    {
+      "id": 9,
+      "type": "Range",
+      "label": "RANGE wide ['#birthdaymeat #date…','That's ok Whiskey F…']",
+      "values": [
+        "#birthdaymeat #datenight #tableforone",
+        "That's ok Whiskey Float! Go ahead and cover my face. Your delicious so it's ok! #grandbarandgrill #hellyes #datenight"
+      ],
+      "low_inc": true,
+      "high_inc": true
+    },
+    {
+      "id": 10,
+      "type": "Range",
+      "label": "RANGE >= 'Genuine happiness ♥…'",
+      "values": [
+        "Genuine happiness ♥ #love #happiness #datenight #MyManFuckingRULES #lovebirds #Bligsworth #babesworthforever #holidayparty #holidaycheer #HappyNewYear #SamuraiMessengerService #TheGrandBarandGrill #Williamsburg #Brooklyn #NYC #artandmusicareeverything #glaskwanfamilyposseclan #PhotoGrid #nicokwanart",
+        ""
+      ],
+      "low_inc": true,
+      "high_inc": false
+    }
+  ]
+}

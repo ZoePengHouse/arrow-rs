@@ -1,0 +1,122 @@
+{
+  "rank": 3,
+  "benchmark": "Hatred",
+  "table": "Hatred_1",
+  "column": "Tweet Text",
+  "col_idx": 27,
+  "avg_len": 108.2,
+  "prefix_len": 2,
+  "psa_score": 100.9,
+  "queries": [
+    {
+      "id": 1,
+      "type": "Eq",
+      "label": "EQ '@Delo_44 @kanyewest…'",
+      "values": [
+        "@Delo_44 @kanyewest not a gimp anymore thank you very much"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 2,
+      "type": "Eq",
+      "label": "EQ 'Hoping my boys surg…'",
+      "values": [
+        "Hoping my boys surgery goes well 2mrrw see u soon Gimp @tannerrhoades44"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 3,
+      "type": "Eq",
+      "label": "EQ 'Perfect evening on …'",
+      "values": [
+        "Perfect evening on a dusty road #adventure #summer #vacation #exploreeverything @ Sea Hag Soaps & Art https://t.co/uVwcGV4Flm"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 4,
+      "type": "Ne",
+      "label": "NE 'Hoping my boys surg…'",
+      "values": [
+        "Hoping my boys surgery goes well 2mrrw see u soon Gimp @tannerrhoades44"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 5,
+      "type": "In",
+      "label": "IN(2) '@itsmarisman HE IS …','POP UP #fleamarket …'",
+      "values": [
+        "@itsmarisman HE IS MR.DILAPLANE HES WHITE AS FUCK AND SPEAKS SPANISH LIKE A GRINGO. IM DEAD",
+        "POP UP #fleamarket 7/18/15 #artmercantile #seahagbarn #antiques # #barnsale @ Sea Hag Soaps & Art https://t.co/zjU8XKKzpr"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 6,
+      "type": "In",
+      "label": "IN(3) '@Delo_44 @kanyewest…',…",
+      "values": [
+        "@Delo_44 @kanyewest not a gimp anymore thank you very much",
+        "Hoping my boys surgery goes well 2mrrw see u soon Gimp @tannerrhoades44",
+        "Perfect evening on a dusty road #adventure #summer #vacation #exploreeverything @ Sea Hag Soaps & Art https://t.co/uVwcGV4Flm"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 7,
+      "type": "In",
+      "label": "IN(5) '#allnaturalproducts…',…",
+      "values": [
+        "#allnaturalproducts #fallhasarrived #hikes last brief moments of fall @ Sea Hag Soaps & Art Mercantile https://t.co/DueXZOKzfe",
+        "@oliviaaa8911 yeah you old hag. Quit acting like an elderly bitch and come out with me with lots of love xoxox https://t.co/iFY5HPu6az",
+        "Hoping my boys surgery goes well 2mrrw see u soon Gimp @tannerrhoades44",
+        "Need a great gift for Christmas? This is our three pack of natural hand made Sea Hag Soap. We have a https://t.co/Sot1wLyG94",
+        "you know schools almost over when everyone has gimp..."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 8,
+      "type": "Range",
+      "label": "RANGE ['@oliviaaa8911 yeah …','Need a great gift f…']",
+      "values": [
+        "@oliviaaa8911 yeah you old hag. Quit acting like an elderly bitch and come out with me with lots of love xoxox https://t.co/iFY5HPu6az",
+        "Need a great gift for Christmas? This is our three pack of natural hand made Sea Hag Soap. We have a https://t.co/Sot1wLyG94"
+      ],
+      "low_inc": true,
+      "high_inc": true
+    },
+    {
+      "id": 9,
+      "type": "Range",
+      "label": "RANGE wide ['@Delo_44 @kanyewest…','Perfect evening on …']",
+      "values": [
+        "@Delo_44 @kanyewest not a gimp anymore thank you very much",
+        "Perfect evening on a dusty road #adventure #summer #vacation #exploreeverything @ Sea Hag Soaps & Art https://t.co/uVwcGV4Flm"
+      ],
+      "low_inc": true,
+      "high_inc": true
+    },
+    {
+      "id": 10,
+      "type": "Range",
+      "label": "RANGE >= 'Hoping my boys surg…'",
+      "values": [
+        "Hoping my boys surgery goes well 2mrrw see u soon Gimp @tannerrhoades44",
+        ""
+      ],
+      "low_inc": true,
+      "high_inc": false
+    }
+  ]
+}

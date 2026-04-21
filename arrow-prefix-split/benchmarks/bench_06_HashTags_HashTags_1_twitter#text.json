@@ -1,0 +1,122 @@
+{
+  "rank": 6,
+  "benchmark": "HashTags",
+  "table": "HashTags_1",
+  "column": "twitter#text",
+  "col_idx": 46,
+  "avg_len": 153.1,
+  "prefix_len": 64,
+  "psa_score": 84.6,
+  "queries": [
+    {
+      "id": 1,
+      "type": "Eq",
+      "label": "EQ '#الكويت #الرياض #ال…'",
+      "values": [
+        "#الكويت #الرياض #الإمارات    - ايران:احياء الذكرى الثالثة لاستشهاد المجاهد البطل جعفر كاظمي http://t.co/ajSp09qT5p #ABC #Belgium #usa #CNN"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 2,
+      "type": "Eq",
+      "label": "EQ 'Un atracador armado…'",
+      "values": [
+        "Un atracador armado con un cuchillo huye, asustado, ante los gritos de sus víctimas: El aguacil aguacilad... http://t.co/WIbX9EUPJV #abc"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 3,
+      "type": "Eq",
+      "label": "EQ 'برنامج للايفون وايب…'",
+      "values": [
+        "برنامج للايفون وايباد# ABC Smart تعليم الاطفال الحروف الانجليزيه والكلمات ايضا https://t.co/sdCDAZn9ZE http://t.co/59oG7AmXH6"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 4,
+      "type": "Ne",
+      "label": "NE 'Un atracador armado…'",
+      "values": [
+        "Un atracador armado con un cuchillo huye, asustado, ante los gritos de sus víctimas: El aguacil aguacilad... http://t.co/WIbX9EUPJV #abc"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 5,
+      "type": "In",
+      "label": "IN(2) ''@CastleGermanFan I…','السعودية: عدم الاعت…'",
+      "values": [
+        "'@CastleGermanFan In the whole series? Whoa. RT @ChewPup'Beckett says “Castle” 820 times' Holy shit. #Castle' da zählt wirklich jemand nach!",
+        "السعودية: عدم الاعتراف بالدولة الفلسطينية من شأنه نسف أسس العدالة والإنص http://t.co/3EcM9erLry #ABC #Italy #SecKerry #Iran3rdOption #tehran"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 6,
+      "type": "In",
+      "label": "IN(3) '#الكويت #الرياض #ال…',…",
+      "values": [
+        "#الكويت #الرياض #الإمارات    - ايران:احياء الذكرى الثالثة لاستشهاد المجاهد البطل جعفر كاظمي http://t.co/ajSp09qT5p #ABC #Belgium #usa #CNN",
+        "Un atracador armado con un cuchillo huye, asustado, ante los gritos de sus víctimas: El aguacil aguacilad... http://t.co/WIbX9EUPJV #abc",
+        "برنامج للايفون وايباد# ABC Smart تعليم الاطفال الحروف الانجليزيه والكلمات ايضا https://t.co/sdCDAZn9ZE http://t.co/59oG7AmXH6"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 7,
+      "type": "In",
+      "label": "IN(5) '#الكويت #الرياض #ال…',…",
+      "values": [
+        "#الكويت #الرياض #الإمارات    - ايران:احياء الذكرى الثالثة لاستشهاد المجاهد البطل جعفر كاظمي  http://t.co/ajSp09qT5p #LONDON #News #ABC",
+        "I admit it, I´m a sucker for Ryan and Tessa! #suburgatory",
+        "Un atracador armado con un cuchillo huye, asustado, ante los gritos de sus víctimas: El aguacil aguacilad... http://t.co/WIbX9EUPJV #abc",
+        "اعتلال صحة الرئيس الأوكراني في أوج الاحتجاجات المناهضة لحكم http://t.co/tdteOMSkHT #ABC #Italy #SecKerry #Iran3rdOption #tehran #Denmark #uk",
+        "نشر اتفاق جنيف خطر على الأمن الايراني http://t.co/ery7mY82Z8 #wonder #oman #Italy #media #FreeIran #uk #ABC #Headline #Iraq #Woman #LeMonde"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 8,
+      "type": "Range",
+      "label": "RANGE ['I admit it, I´m a s…','اعتلال صحة الرئيس ا…']",
+      "values": [
+        "I admit it, I´m a sucker for Ryan and Tessa! #suburgatory",
+        "اعتلال صحة الرئيس الأوكراني في أوج الاحتجاجات المناهضة لحكم http://t.co/tdteOMSkHT #ABC #Italy #SecKerry #Iran3rdOption #tehran #Denmark #uk"
+      ],
+      "low_inc": true,
+      "high_inc": true
+    },
+    {
+      "id": 9,
+      "type": "Range",
+      "label": "RANGE wide ['#الكويت #الرياض #ال…','برنامج للايفون وايب…']",
+      "values": [
+        "#الكويت #الرياض #الإمارات    - ايران:احياء الذكرى الثالثة لاستشهاد المجاهد البطل جعفر كاظمي http://t.co/ajSp09qT5p #ABC #Belgium #usa #CNN",
+        "برنامج للايفون وايباد# ABC Smart تعليم الاطفال الحروف الانجليزيه والكلمات ايضا https://t.co/sdCDAZn9ZE http://t.co/59oG7AmXH6"
+      ],
+      "low_inc": true,
+      "high_inc": true
+    },
+    {
+      "id": 10,
+      "type": "Range",
+      "label": "RANGE >= 'Un atracador armado…'",
+      "values": [
+        "Un atracador armado con un cuchillo huye, asustado, ante los gritos de sus víctimas: El aguacil aguacilad... http://t.co/WIbX9EUPJV #abc",
+        ""
+      ],
+      "low_inc": true,
+      "high_inc": false
+    }
+  ]
+}

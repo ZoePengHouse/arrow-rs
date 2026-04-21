@@ -1,0 +1,122 @@
+{
+  "rank": 1,
+  "benchmark": "IGlocations2",
+  "table": "IGlocations2_1",
+  "column": "caption",
+  "col_idx": 1,
+  "avg_len": 154.7,
+  "prefix_len": 3,
+  "psa_score": 142.2,
+  "queries": [
+    {
+      "id": 1,
+      "type": "Eq",
+      "label": "EQ '#earlymorning #Beac…'",
+      "values": [
+        "#earlymorning #Beach #sunrise #Alabama #Beach #walkingonthebeach #Eddie #puppylove #dogslife"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 2,
+      "type": "Eq",
+      "label": "EQ 'Growing up on these…'",
+      "values": [
+        "Growing up on these waters, I can tell you, THIS is NOT the time to be sailing! #dauphinislandregatta #alabama #sailing #gulfofmexico #tragic #MobileAL"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 3,
+      "type": "Eq",
+      "label": "EQ '~Its true there's p…'",
+      "values": [
+        "~Its true there's plenty of other fish in the sea, but why would you want a fish if you have a Mermaid~ @killa_kiley #Sun #Swim #Summer #Saltlife #Life #Live #Love #Laugh #livelokai #Mermaid #Moments #Free #Family #Friend #Beach #Bestie #Beachhouse #Alabama #Oceanlife #Ocean #Stayhereforever #Easter #Weekend"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 4,
+      "type": "Ne",
+      "label": "NE 'Growing up on these…'",
+      "values": [
+        "Growing up on these waters, I can tell you, THIS is NOT the time to be sailing! #dauphinislandregatta #alabama #sailing #gulfofmexico #tragic #MobileAL"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 5,
+      "type": "In",
+      "label": "IN(2) '#happyfriday what s…','The littlest chair.…'",
+      "values": [
+        "#happyfriday what shall I get into this weekend.....?!?!? #huntsville #alabama is sooooooooo slow!! #wherethepartyat ⁉️⁉️",
+        "The littlest chair. #pink #umbrella #DauphinIsland #AlabamaBeaches #Beach #BeachDay #BeachChair #sand #water #shore #StPatricksDay #cute #love #happy #smile #relax"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 6,
+      "type": "In",
+      "label": "IN(3) '#earlymorning #Beac…',…",
+      "values": [
+        "#earlymorning #Beach #sunrise #Alabama #Beach #walkingonthebeach #Eddie #puppylove #dogslife",
+        "Growing up on these waters, I can tell you, THIS is NOT the time to be sailing! #dauphinislandregatta #alabama #sailing #gulfofmexico #tragic #MobileAL",
+        "~Its true there's plenty of other fish in the sea, but why would you want a fish if you have a Mermaid~ @killa_kiley #Sun #Swim #Summer #Saltlife #Life #Live #Love #Laugh #livelokai #Mermaid #Moments #Free #Family #Friend #Beach #Bestie #Beachhouse #Alabama #Oceanlife #Ocean #Stayhereforever #Easter #Weekend"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 7,
+      "type": "In",
+      "label": "IN(5) '\"The sea lives in e…',…",
+      "values": [
+        "\"The sea lives in every one of us\" #Summer #Beach #Life #Drinks #Friends #Family #Swim #Live #Laugh #Enjoy #Alabama #Oceanlife #Saltlife",
+        "#shrimpboat #Alabama #seafood #GulfCoast #Beach",
+        "Growing up on these waters, I can tell you, THIS is NOT the time to be sailing! #dauphinislandregatta #alabama #sailing #gulfofmexico #tragic #MobileAL",
+        "That after work after surf beer! #Alabama #gulfcoast #PBR",
+        "🔥🔥🔥 #smile #curlyhair #vacation #gulfshores #alabama #filter #shower #beckyg #singingintheshower #dancinginthemirror #taken #me #selfie #lovethispic #feelingpretty #beautiful #makeup #cute #beautiful #fortmorgan #fortmorganbeach #fortmorganalabama #surfsideshores #beachin #countrygirl #country #cheesin #snapchat #toofabforyou"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 8,
+      "type": "Range",
+      "label": "RANGE ['#shrimpboat #Alabam…','That after work aft…']",
+      "values": [
+        "#shrimpboat #Alabama #seafood #GulfCoast #Beach",
+        "That after work after surf beer! #Alabama #gulfcoast #PBR"
+      ],
+      "low_inc": true,
+      "high_inc": true
+    },
+    {
+      "id": 9,
+      "type": "Range",
+      "label": "RANGE wide ['#earlymorning #Beac…','~Its true there's p…']",
+      "values": [
+        "#earlymorning #Beach #sunrise #Alabama #Beach #walkingonthebeach #Eddie #puppylove #dogslife",
+        "~Its true there's plenty of other fish in the sea, but why would you want a fish if you have a Mermaid~ @killa_kiley #Sun #Swim #Summer #Saltlife #Life #Live #Love #Laugh #livelokai #Mermaid #Moments #Free #Family #Friend #Beach #Bestie #Beachhouse #Alabama #Oceanlife #Ocean #Stayhereforever #Easter #Weekend"
+      ],
+      "low_inc": true,
+      "high_inc": true
+    },
+    {
+      "id": 10,
+      "type": "Range",
+      "label": "RANGE >= 'Growing up on these…'",
+      "values": [
+        "Growing up on these waters, I can tell you, THIS is NOT the time to be sailing! #dauphinislandregatta #alabama #sailing #gulfofmexico #tragic #MobileAL",
+        ""
+      ],
+      "low_inc": true,
+      "high_inc": false
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "rank": 4,
+  "benchmark": "Romance",
+  "table": "Romance_1",
+  "column": "caption",
+  "col_idx": 2,
+  "avg_len": 107.2,
+  "prefix_len": 2,
+  "psa_score": 99.9,
+  "queries": [
+    {
+      "id": 1,
+      "type": "Eq",
+      "label": "EQ '#bucatini for #date…'",
+      "values": [
+        "#bucatini for #datenight :D"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 2,
+      "type": "Eq",
+      "label": "EQ 'Holy Yummy Food!!!!…'",
+      "values": [
+        "Holy Yummy Food!!!! 😍😍😋😋 #cheesy #meaty #pastries #foodporn #greek #food #appetizer  #nyc #datenight #eastvillage"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 3,
+      "type": "Eq",
+      "label": "EQ 'delicious dinner @b…'",
+      "values": [
+        "delicious dinner @barprimi #lobster #linguini #datenight #fridaynight #bowery #neighbourhood #cosy 😍👫👌🏼"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 4,
+      "type": "Ne",
+      "label": "NE 'Holy Yummy Food!!!!…'",
+      "values": [
+        "Holy Yummy Food!!!! 😍😍😋😋 #cheesy #meaty #pastries #foodporn #greek #food #appetizer  #nyc #datenight #eastvillage"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 5,
+      "type": "In",
+      "label": "IN(2) '#roomielove #dateni…','Stuffed Meatballs @…'",
+      "values": [
+        "#roomielove #datenight",
+        "Stuffed Meatballs @barprimi #mastersofeat #eeeeeats #12am #eeeeeats  #eatingnyc #datenight #brooklynspot #foodies #mastersofeat #teachingyou #thebasics #noleftovers #newforkcity #hungrygrls #eatingnewyork #dinner #brooklyn #nyc #grubshotsnyc #nycfoodgals #love #foodporn #instafood"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 6,
+      "type": "In",
+      "label": "IN(3) '#bucatini for #date…',…",
+      "values": [
+        "#bucatini for #datenight :D",
+        "Holy Yummy Food!!!! 😍😍😋😋 #cheesy #meaty #pastries #foodporn #greek #food #appetizer  #nyc #datenight #eastvillage",
+        "delicious dinner @barprimi #lobster #linguini #datenight #fridaynight #bowery #neighbourhood #cosy 😍👫👌🏼"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 7,
+      "type": "In",
+      "label": "IN(5) '#Aboutlastnight #Da…',…",
+      "values": [
+        "#Aboutlastnight #Datenight #SBM #Rosé #Deliceats",
+        "#shortribrav #garlicandbreadcrumbs #pomodoro #barprimi #carbs #carbqueen #datenight #dinner #pasta #bowery #nyc #foodporn #foodiesofinstagram #love #nyc",
+        "Holy Yummy Food!!!! 😍😍😋😋 #cheesy #meaty #pastries #foodporn #greek #food #appetizer  #nyc #datenight #eastvillage",
+        "Pre-snowstorm date night ☃🍷\\",
+        "👫 His & her 🍝🍝 #linguine #squidink #crab 🐙🦀 #barprimi #nyceats #sunnyalex #datenight #carbscarbscarbs #absolutelydelicious 👏🏼🇮🇹 @barprimi"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 8,
+      "type": "Range",
+      "label": "RANGE ['#shortribrav #garli…','Pre-snowstorm date …']",
+      "values": [
+        "#shortribrav #garlicandbreadcrumbs #pomodoro #barprimi #carbs #carbqueen #datenight #dinner #pasta #bowery #nyc #foodporn #foodiesofinstagram #love #nyc",
+        "Pre-snowstorm date night ☃🍷\\"
+      ],
+      "low_inc": true,
+      "high_inc": true
+    },
+    {
+      "id": 9,
+      "type": "Range",
+      "label": "RANGE wide ['#bucatini for #date…','delicious dinner @b…']",
+      "values": [
+        "#bucatini for #datenight :D",
+        "delicious dinner @barprimi #lobster #linguini #datenight #fridaynight #bowery #neighbourhood #cosy 😍👫👌🏼"
+      ],
+      "low_inc": true,
+      "high_inc": true
+    },
+    {
+      "id": 10,
+      "type": "Range",
+      "label": "RANGE >= 'Holy Yummy Food!!!!…'",
+      "values": [
+        "Holy Yummy Food!!!! 😍😍😋😋 #cheesy #meaty #pastries #foodporn #greek #food #appetizer  #nyc #datenight #eastvillage",
+        ""
+      ],
+      "low_inc": true,
+      "high_inc": false
+    }
+  ]
+}

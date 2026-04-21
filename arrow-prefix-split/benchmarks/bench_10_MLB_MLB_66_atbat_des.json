@@ -1,0 +1,122 @@
+{
+  "rank": 10,
+  "benchmark": "MLB",
+  "table": "MLB_66",
+  "column": "atbat_des",
+  "col_idx": 1,
+  "avg_len": 86.5,
+  "prefix_len": 3,
+  "psa_score": 79.3,
+  "queries": [
+    {
+      "id": 1,
+      "type": "Eq",
+      "label": "EQ 'Charlie Blackmon fl…'",
+      "values": [
+        "Charlie Blackmon flies out to center fielder Luis Durango."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 2,
+      "type": "Eq",
+      "label": "EQ 'Joel Weeks out on a…'",
+      "values": [
+        "Joel Weeks out on a sacrifice bunt, third baseman Ray Chang to second baseman Yangervis Solarte. Jose Flores to 2nd."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 3,
+      "type": "Eq",
+      "label": "EQ 'Ryan Gennett out on…'",
+      "values": [
+        "Ryan Gennett out on a sacrifice bunt, catcher Michael Brenly to first baseman Justin Bour. Josh Prince to 2nd."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 4,
+      "type": "Ne",
+      "label": "NE 'Joel Weeks out on a…'",
+      "values": [
+        "Joel Weeks out on a sacrifice bunt, third baseman Ray Chang to second baseman Yangervis Solarte. Jose Flores to 2nd."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 5,
+      "type": "In",
+      "label": "IN(2) 'Dallas McPherson do…','Reymond Fuentes out…'",
+      "values": [
+        "Dallas McPherson doubles (1) on a fly ball to center fielder Matt Angle.",
+        "Reymond Fuentes out on a sacrifice bunt, pitcher Kelvin Marte to first baseman Luke Anders. Rico Noel to 3rd. Eric Patterson to 2nd."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 6,
+      "type": "In",
+      "label": "IN(3) 'Charlie Blackmon fl…',…",
+      "values": [
+        "Charlie Blackmon flies out to center fielder Luis Durango.",
+        "Joel Weeks out on a sacrifice bunt, third baseman Ray Chang to second baseman Yangervis Solarte. Jose Flores to 2nd.",
+        "Ryan Gennett out on a sacrifice bunt, catcher Michael Brenly to first baseman Justin Bour. Josh Prince to 2nd."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 7,
+      "type": "In",
+      "label": "IN(5) 'Ben Paulsen flies o…',…",
+      "values": [
+        "Ben Paulsen flies out to center fielder T. J. Steele.",
+        "Daniel Dorn singles on a fly ball to left fielder Clay Timpner. Jeremy Hermida scores. Michael Griffin to 2nd.",
+        "Joel Weeks out on a sacrifice bunt, third baseman Ray Chang to second baseman Yangervis Solarte. Jose Flores to 2nd.",
+        "Mike Jacobs out on a sacrifice fly to center fielder Luis Durango. Josh Fields scores.",
+        "Yonder Alonso flies out to right fielder Andy Dirks."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 8,
+      "type": "Range",
+      "label": "RANGE ['Daniel Dorn singles…','Mike Jacobs out on …']",
+      "values": [
+        "Daniel Dorn singles on a fly ball to left fielder Clay Timpner. Jeremy Hermida scores. Michael Griffin to 2nd.",
+        "Mike Jacobs out on a sacrifice fly to center fielder Luis Durango. Josh Fields scores."
+      ],
+      "low_inc": true,
+      "high_inc": true
+    },
+    {
+      "id": 9,
+      "type": "Range",
+      "label": "RANGE wide ['Charlie Blackmon fl…','Ryan Gennett out on…']",
+      "values": [
+        "Charlie Blackmon flies out to center fielder Luis Durango.",
+        "Ryan Gennett out on a sacrifice bunt, catcher Michael Brenly to first baseman Justin Bour. Josh Prince to 2nd."
+      ],
+      "low_inc": true,
+      "high_inc": true
+    },
+    {
+      "id": 10,
+      "type": "Range",
+      "label": "RANGE >= 'Joel Weeks out on a…'",
+      "values": [
+        "Joel Weeks out on a sacrifice bunt, third baseman Ray Chang to second baseman Yangervis Solarte. Jose Flores to 2nd.",
+        ""
+      ],
+      "low_inc": true,
+      "high_inc": false
+    }
+  ]
+}

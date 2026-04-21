@@ -31,6 +31,8 @@ arrow-array  = { path = "../arrow-array",  version = "58.1.0" }
 arrow-buffer = { path = "../arrow-buffer", version = "58.1.0" }
 arrow-schema = { path = "../arrow-schema", version = "58.1.0" }
 arrow-data   = { path = "../arrow-data",   version = "58.1.0" }
+serde        = { version = "1", features = ["derive"] }
+serde_json   = "1"
 
 [dev-dependencies]
 criterion = { version = "0.8.0", default-features = false, features = ["rayon"] }
@@ -39,6 +41,14 @@ rand = "0.9"
 [[bin]]
 name = "compare"
 path = "src/bin/compare.rs"
+
+[[bin]]
+name = "column_stats"
+path = "src/bin/column_stats.rs"
+
+[[bin]]
+name = "bench_runner"
+path = "src/bin/bench_runner.rs"
 
 [[bench]]
 name = "search_bench"

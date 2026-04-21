@@ -1,0 +1,122 @@
+{
+  "rank": 7,
+  "benchmark": "CityMaxCapita",
+  "table": "CityMaxCapita_1",
+  "column": "Tweet Text",
+  "col_idx": 24,
+  "avg_len": 89.1,
+  "prefix_len": 2,
+  "psa_score": 82.7,
+  "queries": [
+    {
+      "id": 1,
+      "type": "Eq",
+      "label": "EQ '@MosthatedJG Why he…'",
+      "values": [
+        "@MosthatedJG Why here I am! I'm that disabled bitch who will beat the shit out of any zombies! Kaboom! Off with your head zombie. hehehe"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 2,
+      "type": "Eq",
+      "label": "EQ 'Bare cunt b bare cu…'",
+      "values": [
+        "Bare cunt b bare cunt"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 3,
+      "type": "Eq",
+      "label": "EQ 'You know its amazin…'",
+      "values": [
+        "You know its amazing how disabled people are treated by companies.. No car ..no way to get mail.. :( wish I was just gone.."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 4,
+      "type": "Ne",
+      "label": "NE 'Bare cunt b bare cu…'",
+      "values": [
+        "Bare cunt b bare cunt"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 5,
+      "type": "In",
+      "label": "IN(2) '@Stana_Katic Great …','Well it did not tak…'",
+      "values": [
+        "@Stana_Katic Great Pick, Cuban kids going to School.",
+        "Well it did not take long for that fucking ugly twat to tell cody everything. Then we get fish. #bb16 prolly told her to tell.... cunt"
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 6,
+      "type": "In",
+      "label": "IN(3) '@MosthatedJG Why he…',…",
+      "values": [
+        "@MosthatedJG Why here I am! I'm that disabled bitch who will beat the shit out of any zombies! Kaboom! Off with your head zombie. hehehe",
+        "Bare cunt b bare cunt",
+        "You know its amazing how disabled people are treated by companies.. No car ..no way to get mail.. :( wish I was just gone.."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 7,
+      "type": "In",
+      "label": "IN(5) '#ChophieMemories Wh…',…",
+      "values": [
+        "#ChophieMemories When chels called me a cunt saturday on twitter",
+        "@VictoriaParkKit Just got back from Victoria Park walk with the dog. Stopped in at the washroom.....9 people in the disabled washroom.?",
+        "Bare cunt b bare cunt",
+        "Today's test kitchen project: recreate graham cracker/peanut butter/protein chocolate bars I had at the gym #messykitchen #notachocolatier",
+        "rule of the thumb you can't be ugly fat AND a bitch cunt."
+      ],
+      "low_inc": false,
+      "high_inc": false
+    },
+    {
+      "id": 8,
+      "type": "Range",
+      "label": "RANGE ['@VictoriaParkKit Ju…','Today's test kitche…']",
+      "values": [
+        "@VictoriaParkKit Just got back from Victoria Park walk with the dog. Stopped in at the washroom.....9 people in the disabled washroom.?",
+        "Today's test kitchen project: recreate graham cracker/peanut butter/protein chocolate bars I had at the gym #messykitchen #notachocolatier"
+      ],
+      "low_inc": true,
+      "high_inc": true
+    },
+    {
+      "id": 9,
+      "type": "Range",
+      "label": "RANGE wide ['@MosthatedJG Why he…','You know its amazin…']",
+      "values": [
+        "@MosthatedJG Why here I am! I'm that disabled bitch who will beat the shit out of any zombies! Kaboom! Off with your head zombie. hehehe",
+        "You know its amazing how disabled people are treated by companies.. No car ..no way to get mail.. :( wish I was just gone.."
+      ],
+      "low_inc": true,
+      "high_inc": true
+    },
+    {
+      "id": 10,
+      "type": "Range",
+      "label": "RANGE >= 'Bare cunt b bare cu…'",
+      "values": [
+        "Bare cunt b bare cunt",
+        ""
+      ],
+      "low_inc": true,
+      "high_inc": false
+    }
+  ]
+}
