@@ -72,12 +72,18 @@ struct BenchmarkDef {
 // ── CLI ───────────────────────────────────────────────────────────────────────
 
 struct Config {
-    data_root:      PathBuf,
-    benchmarks_dir: PathBuf,
-    run_name:       Option<String>, // None = all
-    use_samples:    bool,
-    iters:          usize,
-    csv_out:        Option<PathBuf>,
+    data_root:       PathBuf,
+    benchmarks_dir:  PathBuf,
+    run_name:        Option<String>, // None = all
+    use_samples:     bool,
+    iters:           usize,
+    csv_out:         Option<PathBuf>,
+    /// Segment size for all PSA variants.
+    /// Defaults to 10 in sample mode (so 20-row files produce sealed segments)
+    /// and 1_000 in real-data mode.
+    segment_size:    usize,
+    /// Fixed prefix length for the PSA-fixed variant (default: 3).
+    fixed_prefix_len: usize,
 }
 
 fn parse_args() -> Config {
@@ -90,8 +96,10 @@ fn parse_args() -> Config {
         args.iter().any(|a| a == flag)
     }
 
-    let data = flag_val(&args, "--data")
-        .unwrap_or("/Users/zixpeng/Documents/Research/CS681/public_bi_benchmark");
+    let data = flag_val(&args, "--data").unwrap_or_else(|| {
+        eprintln!("Error: --data <path> is required (path to public_bi_benchmark root)");
+        std::process::exit(1);
+    });
 
     let use_samples  = has_flag(&args, "--use-samples");
     let default_iters = if use_samples { 200 } else { 20 };
@@ -107,13 +115,26 @@ fn parse_args() -> Config {
         flag_val(&args, "--run").map(str::to_string)
     };
 
+    // Segment size: small default for samples so 20-row files produce sealed
+    // segments and the prefix slab is actually used.
+    let default_seg = if use_samples { 10 } else { 1_000 };
+    let segment_size = flag_val(&args, "--segment-size")
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(default_seg);
+
+    let fixed_prefix_len = flag_val(&args, "--fixed-prefix")
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(3usize);
+
     Config {
-        data_root:      PathBuf::from(data),
-        benchmarks_dir: PathBuf::from(flag_val(&args, "--benchmarks-dir").unwrap_or("benchmarks")),
+        data_root:       PathBuf::from(data),
+        benchmarks_dir:  PathBuf::from(flag_val(&args, "--benchmarks-dir").unwrap_or("benchmarks")),
         run_name,
         use_samples,
         iters,
-        csv_out: flag_val(&args, "--csv").map(PathBuf::from),
+        csv_out:          flag_val(&args, "--csv").map(PathBuf::from),
+        segment_size,
+        fixed_prefix_len,
     }
 }
 
@@ -184,16 +205,38 @@ fn build_sa(col: &[Option<String>]) -> StringArray {
 }
 
 fn build_psa(
-    col:       &[Option<String>],
-    threshold: f64,
-    plateau:   f64,
+    col:          &[Option<String>],
+    threshold:    f64,
+    plateau:      f64,
+    segment_size: usize,
 ) -> arrow_prefix_split::PrefixSplitArray {
     let cfg = PrefixSplitConfig {
-        segment_size:                 1_000,
+        segment_size,
         prefix_distinguish_threshold: threshold,
         max_prefix_len:               64,
         plateau_min_gain_fraction:    plateau,
         plateau_min_progress:         0.5,
+        fixed_prefix_len:             None,
+    };
+    let mut b = PrefixSplitBuilder::with_config(cfg);
+    for v in col { b.append_option(v.as_deref()); }
+    b.finish()
+}
+
+/// Build a PSA that uses a hard-wired prefix length for every segment,
+/// skipping the threshold-computation algorithm entirely.
+fn build_psa_fixed(
+    col:          &[Option<String>],
+    prefix_len:   usize,
+    segment_size: usize,
+) -> arrow_prefix_split::PrefixSplitArray {
+    let cfg = PrefixSplitConfig {
+        segment_size,
+        prefix_distinguish_threshold: 0.9,   // ignored when fixed_prefix_len is set
+        max_prefix_len:               64,
+        plateau_min_gain_fraction:    0.0,
+        plateau_min_progress:         0.5,
+        fixed_prefix_len:             Some(prefix_len),
     };
     let mut b = PrefixSplitBuilder::with_config(cfg);
     for v in col { b.append_option(v.as_deref()); }
@@ -280,6 +323,7 @@ struct QueryResult {
     sa_ns:      u128,
     psa90_ns:   u128,
     psapl_ns:   u128,
+    psafx_ns:   u128,   // PSA with fixed prefix_len
 }
 
 impl QueryResult {
@@ -288,6 +332,9 @@ impl QueryResult {
     }
     fn speedup_pl(&self) -> f64 {
         if self.psapl_ns == 0 { 1.0 } else { self.sa_ns as f64 / self.psapl_ns as f64 }
+    }
+    fn speedup_fx(&self) -> f64 {
+        if self.psafx_ns == 0 { 1.0 } else { self.sa_ns as f64 / self.psafx_ns as f64 }
     }
     /// Format a nanosecond value as "42 ns", "1.3 µs", "2.5 ms" automatically.
     fn fmt_time(ns: u128) -> String {
@@ -303,7 +350,9 @@ impl QueryResult {
 
 // ── Core: run one benchmark def ───────────────────────────────────────────────
 
-fn run_one(def: &BenchmarkDef, cfg: &Config) -> (Vec<QueryResult>, PrefixStats, PrefixStats, usize) {
+fn run_one(def: &BenchmarkDef, cfg: &Config)
+    -> (Vec<QueryResult>, PrefixStats, PrefixStats, PrefixStats, usize)
+{
     let path = match data_path(cfg, def) {
         Some(p) => p,
         None => {
@@ -312,8 +361,8 @@ fn run_one(def: &BenchmarkDef, cfg: &Config) -> (Vec<QueryResult>, PrefixStats, 
                 def.rank, def.benchmark, def.table,
                 if cfg.use_samples { "sample " } else { "" }
             );
-            let empty_ps = PrefixStats { min: 0, median: 0, max: 0 };
-            return (vec![], empty_ps, PrefixStats { min: 0, median: 0, max: 0 }, 0);
+            let z = PrefixStats { min: 0, median: 0, max: 0 };
+            return (vec![], z, PrefixStats { min:0,median:0,max:0 }, PrefixStats { min:0,median:0,max:0 }, 0);
         }
     };
 
@@ -321,30 +370,34 @@ fn run_one(def: &BenchmarkDef, cfg: &Config) -> (Vec<QueryResult>, PrefixStats, 
     let col = load_column(&path, def.col_idx);
     if col.is_empty() {
         eprintln!("(empty)");
-        let empty_ps = PrefixStats { min: 0, median: 0, max: 0 };
-        return (vec![], empty_ps, PrefixStats { min: 0, median: 0, max: 0 }, 0);
+        let z = PrefixStats { min: 0, median: 0, max: 0 };
+        return (vec![], z, PrefixStats { min:0,median:0,max:0 }, PrefixStats { min:0,median:0,max:0 }, 0);
     }
     eprintln!("{} rows", col.len());
 
+    let seg   = cfg.segment_size;
     let sa    = build_sa(&col);
-    let psa90 = build_psa(&col, 0.9, 0.0);
-    let psapl = build_psa(&col, 0.9, 0.01);
+    let psa90 = build_psa(&col, 0.9, 0.0,  seg);
+    let psapl = build_psa(&col, 0.9, 0.01, seg);
+    let psafx = build_psa_fixed(&col, cfg.fixed_prefix_len, seg);
     let p90   = prefix_stats(&psa90);
     let ppl   = prefix_stats(&psapl);
+    let pfx   = prefix_stats(&psafx);
     let iters = cfg.iters;
     let nrows = col.len();
 
     let mut results = Vec::new();
 
     for q in &def.queries {
-        let (matches, t_sa, t_90, t_pl) = match q.query_type.as_str() {
+        let (matches, t_sa, t_90, t_pl, t_fx) = match q.query_type.as_str() {
             "Eq" => {
                 let v = &q.values[0];
                 let m  = sa_search_eq(&sa, v);
                 let ts = time_fn(|| sa_search_eq(&sa, v), iters);
                 let t9 = time_fn(|| search_eq(&psa90, v).len(), iters);
                 let tp = time_fn(|| search_eq(&psapl, v).len(), iters);
-                (m, ts, t9, tp)
+                let tf = time_fn(|| search_eq(&psafx, v).len(), iters);
+                (m, ts, t9, tp, tf)
             }
             "Ne" => {
                 let v = &q.values[0];
@@ -352,7 +405,8 @@ fn run_one(def: &BenchmarkDef, cfg: &Config) -> (Vec<QueryResult>, PrefixStats, 
                 let ts = time_fn(|| sa_search_ne(&sa, v), iters);
                 let t9 = time_fn(|| search_ne(&psa90, v).len(), iters);
                 let tp = time_fn(|| search_ne(&psapl, v).len(), iters);
-                (m, ts, t9, tp)
+                let tf = time_fn(|| search_ne(&psafx, v).len(), iters);
+                (m, ts, t9, tp, tf)
             }
             "In" => {
                 let vals = q.values.clone();
@@ -360,7 +414,8 @@ fn run_one(def: &BenchmarkDef, cfg: &Config) -> (Vec<QueryResult>, PrefixStats, 
                 let ts = time_fn(|| sa_search_in(&sa, &vals), iters);
                 let t9 = time_fn(|| psa_search_in(&psa90, &vals), iters);
                 let tp = time_fn(|| psa_search_in(&psapl, &vals), iters);
-                (m, ts, t9, tp)
+                let tf = time_fn(|| psa_search_in(&psafx, &vals), iters);
+                (m, ts, t9, tp, tf)
             }
             "Range" => {
                 let lo = &q.values[0];
@@ -371,7 +426,8 @@ fn run_one(def: &BenchmarkDef, cfg: &Config) -> (Vec<QueryResult>, PrefixStats, 
                 let ts = time_fn(|| sa_search_range(&sa, lo, li, hi, hi_inc), iters);
                 let t9 = time_fn(|| psa_search_range(&psa90, lo, li, hi, hi_inc), iters);
                 let tp = time_fn(|| psa_search_range(&psapl, lo, li, hi, hi_inc), iters);
-                (m, ts, t9, tp)
+                let tf = time_fn(|| psa_search_range(&psafx, lo, li, hi, hi_inc), iters);
+                (m, ts, t9, tp, tf)
             }
             other => {
                 eprintln!("  [warn] Unknown query type '{}' in query {}", other, q.id);
@@ -387,10 +443,11 @@ fn run_one(def: &BenchmarkDef, cfg: &Config) -> (Vec<QueryResult>, PrefixStats, 
             sa_ns:    t_sa.as_nanos(),
             psa90_ns: t_90.as_nanos(),
             psapl_ns: t_pl.as_nanos(),
+            psafx_ns: t_fx.as_nanos(),
         });
     }
 
-    (results, p90, ppl, nrows)
+    (results, p90, ppl, pfx, nrows)
 }
 
 // ── Output ────────────────────────────────────────────────────────────────────
@@ -417,11 +474,13 @@ fn run_one(def: &BenchmarkDef, cfg: &Config) -> (Vec<QueryResult>, PrefixStats, 
 ///   = 1.0x  → same speed
 ///   < 1.0x  → PSA is slower  (overhead exceeds saving)
 fn print_benchmark_results(
-    def:     &BenchmarkDef,
-    results: &[QueryResult],
-    p90:     &PrefixStats,
-    ppl:     &PrefixStats,
-    rows:    usize,
+    def:          &BenchmarkDef,
+    results:      &[QueryResult],
+    p90:          &PrefixStats,
+    ppl:          &PrefixStats,
+    pfx:          &PrefixStats,
+    fixed_prefix: usize,
+    rows:         usize,
 ) {
     if results.is_empty() { return; }
 
@@ -431,109 +490,116 @@ fn print_benchmark_results(
         def.rank, def.benchmark, def.table, def.column);
     println!("  {} rows · avg_len={:.1} · P_len={} · score={:.1}",
         rows, def.avg_len, def.prefix_len, def.psa_score);
-    println!("  Prefix stats (sealed segs): PSA-90%  {}/{}/{}  ·  PSA-PL  {}/{}/{}",
+    println!(
+        "  Prefix stats (min/med/max across sealed segs):  \
+         PSA-90%={}/{}/{}  PSA-PL={}/{}/{}  PSA-fix{}={}/{}/{}",
         p90.min, p90.median, p90.max,
-        ppl.min, ppl.median, ppl.max);
+        ppl.min, ppl.median, ppl.max,
+        fixed_prefix, pfx.min, pfx.median, pfx.max,
+    );
     println!();
 
+    let fx_label = format!("×PSA-fix{}", fixed_prefix);
+
     // ── Column headers ────────────────────────────────────────────────────────
-    //   #  Type      Query                              Matches  SA time   ×PSA-90%  ×PSA-PL
-    println!("  {:>2}  {:<8}  {:<35}  {:>7}  {:>8}  {:>9}  {:>8}",
-        "#", "Type", "Query", "Matches", "SA time", "×PSA-90%", "×PSA-PL");
-    println!("  {}", "─".repeat(85));
+    println!("  {:>2}  {:<8}  {:<33}  {:>7}  {:>8}  {:>9}  {:>8}  {:>10}",
+        "#", "Type", "Query", "Matches", "SA time", "×PSA-90%", "×PSA-PL", &fx_label);
+    println!("  {}", "─".repeat(96));
 
     // ── One row per query ─────────────────────────────────────────────────────
     for r in results {
-        // Speedup = SA_time / PSA_time.  >1 means PSA wins.
         let fmt_sp = |sp: f64| -> String {
             if r.sa_ns == 0 {
                 "  —   ".into()
             } else {
-                // Colour-code direction: show a + marker when PSA wins.
                 let marker = if sp > 1.05 { "▲" } else if sp < 0.95 { "▼" } else { " " };
                 format!("{}{:.2}x", marker, sp)
             }
         };
 
-        println!("  {:>2}  {:<8}  {:<35}  {:>7}  {:>8}  {:>9}  {:>8}",
+        println!("  {:>2}  {:<8}  {:<33}  {:>7}  {:>8}  {:>9}  {:>8}  {:>10}",
             r.query_id,
             r.query_type,
-            trunc(&r.label, 35),
+            trunc(&r.label, 33),
             r.matches,
             QueryResult::fmt_time(r.sa_ns),
             fmt_sp(r.speedup_90()),
             fmt_sp(r.speedup_pl()),
+            fmt_sp(r.speedup_fx()),
         );
     }
 
     // ── Per-benchmark summary ─────────────────────────────────────────────────
-    println!("  {}", "─".repeat(85));
+    println!("  {}", "─".repeat(96));
 
     let wins90 = results.iter().filter(|r| r.psa90_ns < r.sa_ns).count();
     let winspl = results.iter().filter(|r| r.psapl_ns < r.sa_ns).count();
+    let winsfx = results.iter().filter(|r| r.psafx_ns < r.sa_ns).count();
     let avg90  = results.iter().map(|r| r.speedup_90()).sum::<f64>() / results.len() as f64;
     let avgpl  = results.iter().map(|r| r.speedup_pl()).sum::<f64>() / results.len() as f64;
+    let avgfx  = results.iter().map(|r| r.speedup_fx()).sum::<f64>() / results.len() as f64;
 
-    println!("  PSA-90%: wins {}/{} queries · avg speedup {:.2}x",
-        wins90, results.len(), avg90);
-    println!("  PSA-PL:  wins {}/{} queries · avg speedup {:.2}x",
-        winspl, results.len(), avgpl);
-    println!("  (▲ = PSA faster  ▼ = PSA slower  SA time = StringArray baseline)");
+    println!("  PSA-90%:  wins {}/{} · avg {:.2}x   \
+              PSA-PL: wins {}/{} · avg {:.2}x   \
+              PSA-fix{}: wins {}/{} · avg {:.2}x",
+        wins90, results.len(), avg90,
+        winspl, results.len(), avgpl,
+        fixed_prefix, winsfx, results.len(), avgfx);
+    println!("  (▲ faster than SA  ▼ slower than SA)");
 }
 
-fn print_global_summary(all: &[(BenchmarkDef, Vec<QueryResult>)]) {
+fn print_global_summary(all: &[(BenchmarkDef, Vec<QueryResult>)], fixed_prefix: usize) {
     if all.is_empty() { return; }
 
     let total_queries: usize = all.iter().map(|(_, rs)| rs.len()).sum();
-    let wins90: usize = all.iter().flat_map(|(_, rs)| rs)
-        .filter(|r| r.psa90_ns < r.sa_ns).count();
-    let winspl: usize = all.iter().flat_map(|(_, rs)| rs)
-        .filter(|r| r.psapl_ns < r.sa_ns).count();
-    let avg90: f64 = all.iter().flat_map(|(_, rs)| rs)
-        .map(|r| r.speedup_90()).sum::<f64>() / total_queries as f64;
-    let avgpl: f64 = all.iter().flat_map(|(_, rs)| rs)
-        .map(|r| r.speedup_pl()).sum::<f64>() / total_queries as f64;
+    let wins90: usize = all.iter().flat_map(|(_, rs)| rs).filter(|r| r.psa90_ns < r.sa_ns).count();
+    let winspl: usize = all.iter().flat_map(|(_, rs)| rs).filter(|r| r.psapl_ns < r.sa_ns).count();
+    let winsfx: usize = all.iter().flat_map(|(_, rs)| rs).filter(|r| r.psafx_ns < r.sa_ns).count();
+    let avg90:  f64   = all.iter().flat_map(|(_, rs)| rs).map(|r| r.speedup_90()).sum::<f64>() / total_queries as f64;
+    let avgpl:  f64   = all.iter().flat_map(|(_, rs)| rs).map(|r| r.speedup_pl()).sum::<f64>() / total_queries as f64;
+    let avgfx:  f64   = all.iter().flat_map(|(_, rs)| rs).map(|r| r.speedup_fx()).sum::<f64>() / total_queries as f64;
 
     // Per-type breakdown.
-    let by_type = |qt: &str| -> (usize, usize, f64, usize, f64) {
-        let qs: Vec<&QueryResult> = all.iter()
-            .flat_map(|(_, rs)| rs)
-            .filter(|r| r.query_type == qt)
-            .collect();
+    let by_type = |qt: &str| -> (usize, usize, f64, usize, f64, usize, f64) {
+        let qs: Vec<&QueryResult> = all.iter().flat_map(|(_, rs)| rs)
+            .filter(|r| r.query_type == qt).collect();
         let n = qs.len();
-        if n == 0 { return (0, 0, 0.0, 0, 0.0); }
+        if n == 0 { return (0,0,0.0,0,0.0,0,0.0); }
         let w90 = qs.iter().filter(|r| r.psa90_ns < r.sa_ns).count();
         let wpl = qs.iter().filter(|r| r.psapl_ns < r.sa_ns).count();
+        let wfx = qs.iter().filter(|r| r.psafx_ns < r.sa_ns).count();
         let a90 = qs.iter().map(|r| r.speedup_90()).sum::<f64>() / n as f64;
         let apl = qs.iter().map(|r| r.speedup_pl()).sum::<f64>() / n as f64;
-        (n, w90, a90, wpl, apl)
+        let afx = qs.iter().map(|r| r.speedup_fx()).sum::<f64>() / n as f64;
+        (n, w90, a90, wpl, apl, wfx, afx)
     };
 
+    let fx_hdr = format!("fix{}-wins", fixed_prefix);
+    let fx_avg = format!("fix{}-avg", fixed_prefix);
+
     println!();
-    println!("{}", "═".repeat(72));
-    println!("  GLOBAL SUMMARY  —  {} benchmarks · {} queries total",
-        all.len(), total_queries);
-    println!("{}", "═".repeat(72));
+    println!("{}", "═".repeat(96));
+    println!("  GLOBAL SUMMARY  —  {} benchmarks · {} queries total", all.len(), total_queries);
+    println!("{}", "═".repeat(96));
     println!();
-    println!("  {:<8}  {:>7}  {:>9}  {:>9}  {:>9}  {:>9}",
-        "Type", "Queries", "90% wins", "90% avg", "PL wins", "PL avg");
-    println!("  {}", "─".repeat(60));
+    println!("  {:<8}  {:>7}  {:>9}  {:>8}  {:>8}  {:>8}  {:>10}  {:>9}",
+        "Type", "Queries", "90%-wins", "90%-avg", "PL-wins", "PL-avg", &fx_hdr, &fx_avg);
+    println!("  {}", "─".repeat(80));
 
     for qt in &["Eq", "Ne", "In", "Range"] {
-        let (n, w90, a90, wpl, apl) = by_type(qt);
+        let (n, w90, a90, wpl, apl, wfx, afx) = by_type(qt);
         if n == 0 { continue; }
-        println!("  {:<8}  {:>7}  {:>9}  {:>8.2}x  {:>9}  {:>8.2}x",
-            qt, n, w90, a90, wpl, apl);
+        println!("  {:<8}  {:>7}  {:>9}  {:>7.2}x  {:>8}  {:>7.2}x  {:>10}  {:>8.2}x",
+            qt, n, w90, a90, wpl, apl, wfx, afx);
     }
 
-    println!("  {}", "─".repeat(60));
-    println!("  {:<8}  {:>7}  {:>9}  {:>8.2}x  {:>9}  {:>8.2}x",
-        "TOTAL", total_queries, wins90, avg90, winspl, avgpl);
+    println!("  {}", "─".repeat(80));
+    println!("  {:<8}  {:>7}  {:>9}  {:>7.2}x  {:>8}  {:>7.2}x  {:>10}  {:>8.2}x",
+        "TOTAL", total_queries, wins90, avg90, winspl, avgpl, winsfx, avgfx);
     println!();
-    println!("{}", "═".repeat(72));
+    println!("{}", "═".repeat(96));
     println!();
-    println!("  SA = StringArray baseline.  Speedup = SA_time / PSA_time.");
-    println!("  >1.0x means PSA is faster;  <1.0x means PSA has overhead.");
+    println!("  Speedup = SA_time / PSA_time.  >1.0x = PSA faster.  <1.0x = PSA has overhead.");
     println!();
 }
 
@@ -544,19 +610,20 @@ fn write_csv(all: &[(BenchmarkDef, Vec<QueryResult>)], path: &Path) -> std::io::
     let mut out = String::new();
     writeln!(out,
         "rank,benchmark,table,column,col_idx,avg_len,prefix_len,psa_score,\
-         query_id,query_type,label,matches,sa_ns,psa90_ns,psapl_ns,speedup_90,speedup_pl"
+         query_id,query_type,label,matches,sa_ns,psa90_ns,psapl_ns,psafx_ns,\
+         speedup_90,speedup_pl,speedup_fx"
     ).unwrap();
     for (def, results) in all {
         for r in results {
             writeln!(out,
-                "{},{},{},{},{},{:.1},{},{:.1},{},{},{},{},{},{},{},{:.4},{:.4}",
+                "{},{},{},{},{},{:.1},{},{:.1},{},{},{},{},{},{},{},{},{:.4},{:.4},{:.4}",
                 def.rank, def.benchmark, def.table,
                 csv_escape(&def.column), def.col_idx,
                 def.avg_len, def.prefix_len, def.psa_score,
                 r.query_id, r.query_type,
                 csv_escape(&r.label),
-                r.matches, r.sa_ns, r.psa90_ns, r.psapl_ns,
-                r.speedup_90(), r.speedup_pl(),
+                r.matches, r.sa_ns, r.psa90_ns, r.psapl_ns, r.psafx_ns,
+                r.speedup_90(), r.speedup_pl(), r.speedup_fx(),
             ).unwrap();
         }
     }
@@ -614,9 +681,11 @@ fn main() {
     }
 
     let mode = if cfg.use_samples { "sample files (--use-samples)" } else { "real data files" };
-    println!("Mode:    {mode}");
-    println!("Iters:   {} timing iterations per query", cfg.iters);
-    println!("Designs: StringArray | PSA-90% | PSA-plateau(1%)");
+    println!("Mode:        {mode}");
+    println!("Iters:       {} timing iterations per query", cfg.iters);
+    println!("Segment sz:  {} rows (seals at this many rows)", cfg.segment_size);
+    println!("Designs:     StringArray | PSA-90% | PSA-plateau(1%) | PSA-fixed-{}",
+        cfg.fixed_prefix_len);
     println!("Found {} benchmark file(s)\n", def_paths.len());
 
     // ── Run each benchmark ────────────────────────────────────────────────────
@@ -635,14 +704,14 @@ fn main() {
         eprintln!("Running rank {:>2}: {}/{}/{} …",
             def.rank, def.benchmark, def.table, def.column);
 
-        let (results, p90, ppl, nrows) = run_one(&def, &cfg);
-        print_benchmark_results(&def, &results, &p90, &ppl, nrows);
+        let (results, p90, ppl, pfx, nrows) = run_one(&def, &cfg);
+        print_benchmark_results(&def, &results, &p90, &ppl, &pfx, cfg.fixed_prefix_len, nrows);
         all.push((def, results));
     }
 
     // ── Global summary ────────────────────────────────────────────────────────
     if all.len() > 1 {
-        print_global_summary(&all);
+        print_global_summary(&all, cfg.fixed_prefix_len);
     }
 
     // ── CSV output ────────────────────────────────────────────────────────────

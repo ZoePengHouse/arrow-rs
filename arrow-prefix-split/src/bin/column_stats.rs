@@ -66,8 +66,10 @@ fn parse_args() -> Config {
         args.iter().any(|a| a == flag)
     }
 
-    let data = flag_val(&args, "--data")
-        .unwrap_or("/Users/zixpeng/Documents/Research/CS681/public_bi_benchmark");
+    let data = flag_val(&args, "--data").unwrap_or_else(|| {
+        eprintln!("Error: --data <path> is required (path to public_bi_benchmark root)");
+        std::process::exit(1);
+    });
 
     let sort_by = match flag_val(&args, "--sort").unwrap_or("score") {
         "avg_len"      => SortBy::AvgLen,

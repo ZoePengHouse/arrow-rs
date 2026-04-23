@@ -25,6 +25,13 @@ pub struct PrefixSplitConfig {
     /// Default: `64`.
     pub max_prefix_len: usize,
 
+    /// When `Some(n)`, skip the threshold algorithm entirely and use `n` as the
+    /// prefix length for every sealed segment.  Useful for ablation studies
+    /// ("what if we always use 3 bytes?") and for unit tests.
+    ///
+    /// Default: `None` (auto-compute from data).
+    pub fixed_prefix_len: Option<usize>,
+
     /// Early-stop fraction for plateau detection.
     ///
     /// At each candidate prefix length `P` we compute the marginal gain:
@@ -61,6 +68,7 @@ impl Default for PrefixSplitConfig {
             max_prefix_len: 64,
             plateau_min_gain_fraction: 0.01,
             plateau_min_progress: 0.5,
+            fixed_prefix_len: None,
         }
     }
 }

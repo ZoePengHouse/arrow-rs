@@ -56,6 +56,12 @@ impl SegmentMeta {
 /// * All values are null → returns 1 (no non-null data to distinguish).
 /// * Only one distinct value → returns 1 (trivially distinguishable).
 pub fn compute_prefix_len(values: &[Option<Vec<u8>>], config: &PrefixSplitConfig) -> usize {
+    // When a fixed prefix length is configured, skip all computation and use
+    // it directly.  Useful for ablation: "what if every segment always uses N bytes?"
+    if let Some(fixed) = config.fixed_prefix_len {
+        return fixed.max(1);
+    }
+
     // Collect references to non-null byte strings.
     let non_null: Vec<&[u8]> = values.iter().filter_map(|v| v.as_deref()).collect();
 
