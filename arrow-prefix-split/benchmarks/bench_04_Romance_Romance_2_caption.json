@@ -1,0 +1,132 @@
+{
+  "rank": 4,
+  "benchmark": "Romance",
+  "table": "Romance_2",
+  "column": "caption",
+  "col_idx": 2,
+  "avg_len": 127.1,
+  "prefix_len": 3,
+  "psa_score": 117.9,
+  "queries": [
+    {
+      "id": 1,
+      "type": "Range",
+      "label": "RANGE 5% ['Double date night…','Genuine happiness…']",
+      "values": [
+        "Double date night in Williamsburg with @hishant1 @hlylis 👫👫🍷🍴 #datenight #doubletrouble #brooklyn #eeeeeats #directorofvibe #thisvibelife",
+        "Genuine happiness ♥ #love #happiness #datenight #MyManFuckingRULES #lovebirds #Bligsworth #babesworthforever #holidayparty #holidaycheer #HappyNewYear #SamuraiMessengerService #TheGrandBarandGrill #Williamsburg #Brooklyn #NYC #artandmusicareeverything #glaskwanfamilyposseclan #PhotoGrid #nicokwanart"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.05
+    },
+    {
+      "id": 2,
+      "type": "Range",
+      "label": "RANGE 10% ['Double date night…','Genuine happiness…']",
+      "values": [
+        "Double date night in Williamsburg with @hishant1 @hlylis 👫👫🍷🍴 #datenight #doubletrouble #brooklyn #eeeeeats #directorofvibe #thisvibelife",
+        "Genuine happiness ♥ #love #happiness #datenight #MyManFuckingRULES #lovebirds #Bligsworth #babesworthforever #holidayparty #holidaycheer #HappyNewYear #SamuraiMessengerService #TheGrandBarandGrill #Williamsburg #Brooklyn #NYC #artandmusicareeverything #glaskwanfamilyposseclan #PhotoGrid #nicokwanart"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.1
+    },
+    {
+      "id": 3,
+      "type": "Range",
+      "label": "RANGE 20% ['Dessert. #datenig…','It does exist #de…']",
+      "values": [
+        "Dessert. #datenight",
+        "It does exist #dennysNYC"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.2
+    },
+    {
+      "id": 4,
+      "type": "Range",
+      "label": "RANGE 30% ['Brussels on the s…','My dinner date lo…']",
+      "values": [
+        "Brussels on the stalk = perfect finger food @semillabk #eater #vegetableforward #datenight 🌿 (For more check out my snapchat: hillarydixler)",
+        "My dinner date looks like an extra from the Sopranos!#datenight #ilovehim 🔪🚬🔫😎"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.3
+    },
+    {
+      "id": 5,
+      "type": "Range",
+      "label": "RANGE 40% ['#wcw #datenight #…','Perfect end to a …']",
+      "values": [
+        "#wcw #datenight #mynewglasses",
+        "Perfect end to a perfect day! Thanks to my #love @shutterblig for making today BEYOND special ☆★☆ #HappyValentinesDay #ValentinesDay #HairMetalWilliamsburg #newhair #newhairnewyou #transformation #punklives #blueismycolor #blue #bluemohawk #mohawk #fiercewomen #raawwrrr #soulmates #MyManFuckingRULES #LadyJays #datenight #glaskwanfamilyposseclan #family #loveandhappiness #onelove #spreadlove #scream #punklives #nofilter"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.4
+    },
+    {
+      "id": 6,
+      "type": "Range",
+      "label": "RANGE 50% ['#datenight with @…','Photo evidence: I…']",
+      "values": [
+        "#datenight with @juliaroven",
+        "Photo evidence: I can smile like a normal person in pictures. @meaghanmayhem is a cutie. #datenight #selfportraitproject"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.5
+    },
+    {
+      "id": 7,
+      "type": "Range",
+      "label": "RANGE 60% ['#datenight wit #J','Shenanigans & pic…']",
+      "values": [
+        "#datenight wit #J",
+        "Shenanigans & pickle backs after our #ValentinesDay dinner ☆ #LadyJays #shenanigans #picklebacks #whiskey #shots #HappyValentinesDay #birthintinesweek #MyManFuckingRULES #soulmates #love #loveandhappiness #truelove #horns #datenight #glaskwanfamilyposseclan #Williamsburg #Brooklyn #NYC #ILoveNYC #newhair #bluemohawk #blueismycolor #blue #nicokwanart #PhotoGrid"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.6
+    },
+    {
+      "id": 8,
+      "type": "Range",
+      "label": "RANGE 70% ['#datenight','Such an awesome e…']",
+      "values": [
+        "#datenight",
+        "Such an awesome evening & we still have to get the #ChristmasTree lol #datenight #MyManFuckingRULES #Christmas #ChristmasLights #ILoveChristmas #PhotoGrid"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.7
+    },
+    {
+      "id": 9,
+      "type": "Range",
+      "label": "RANGE 80% ['#birthdaymeat #da…','That's ok Whiskey…']",
+      "values": [
+        "#birthdaymeat #datenight #tableforone",
+        "That's ok Whiskey Float! Go ahead and cover my face. Your delicious so it's ok! #grandbarandgrill #hellyes #datenight"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.8
+    },
+    {
+      "id": 10,
+      "type": "Range",
+      "label": "RANGE 90% ['#DinnerLab does i…','What a fantastic …']",
+      "values": [
+        "#DinnerLab does it again. #datenight #brooklyn",
+        "What a fantastic fucking meal!!! Grilled Cheese & Leek sandwich with kickass fries ♥ #TheGrandBarandGrill #grilledcheese #leeks #dinner #dinnerwithfriends #datenight #dateday #MyManFuckingRULES #Williamsburg #Brooklyn #NYC #ILoveNYC #foodporn #food #sandwich #goodtimes #Spring #SpringTimeInNY"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.9
+    }
+  ]
+}

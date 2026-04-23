@@ -1,0 +1,132 @@
+{
+  "rank": 5,
+  "benchmark": "NYC",
+  "table": "NYC_1",
+  "column": "Resolution Description",
+  "col_idx": 33,
+  "avg_len": 116.6,
+  "prefix_len": 5,
+  "psa_score": 74.4,
+  "queries": [
+    {
+      "id": 1,
+      "type": "Range",
+      "label": "RANGE 5% ['The Department of…','The Department of…']",
+      "values": [
+        "The Department of Parks and Recreation has reviewed this request and will visit the location to investigate the condition.",
+        "The Department of Parks and Recreation has reviewed this request and will visit the location to investigate the condition."
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.05
+    },
+    {
+      "id": 2,
+      "type": "Range",
+      "label": "RANGE 10% ['The Department of…','The Department of…']",
+      "values": [
+        "The Department of Parks and Recreation has reviewed this request and will visit the location to investigate the condition.",
+        "The Department of Parks and Recreation has reviewed this request and will visit the location to investigate the condition."
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.1
+    },
+    {
+      "id": 3,
+      "type": "Range",
+      "label": "RANGE 20% ['The Department of…','The Department of…']",
+      "values": [
+        "The Department of Parks and Recreation has reviewed this request and will visit the location to investigate the condition.",
+        "The Department of Parks and Recreation has reviewed this request and will visit the location to investigate the condition."
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.2
+    },
+    {
+      "id": 4,
+      "type": "Range",
+      "label": "RANGE 30% ['The Department of…','The Department of…']",
+      "values": [
+        "The Department of Parks and Recreation has reviewed this request and will visit the location to investigate the condition.",
+        "The Department of Parks and Recreation has reviewed this request and will visit the location to investigate the condition."
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.3
+    },
+    {
+      "id": 5,
+      "type": "Range",
+      "label": "RANGE 40% ['The Department of…','The Department of…']",
+      "values": [
+        "The Department of Parks and Recreation has reviewed this request and will visit the location to investigate the condition.",
+        "The Department of Parks and Recreation has reviewed this request and will visit the location to investigate the condition."
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.4
+    },
+    {
+      "id": 6,
+      "type": "Range",
+      "label": "RANGE 50% ['The Department of…','The condition has…']",
+      "values": [
+        "The Department of Parks and Recreation has reviewed this request and will visit the location to investigate the condition.",
+        "The condition has been inspected and a work order was created."
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.5
+    },
+    {
+      "id": 7,
+      "type": "Range",
+      "label": "RANGE 60% ['A Park Enforcemen…','The condition has…']",
+      "values": [
+        "A Park Enforcement Patrol officer or Park Ranger has been notified and dispatched to address the situation.",
+        "The condition has been inspected and a work order was created."
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.6
+    },
+    {
+      "id": 8,
+      "type": "Range",
+      "label": "RANGE 70% ['A Park Enforcemen…','The condition has…']",
+      "values": [
+        "A Park Enforcement Patrol officer or Park Ranger has been notified and dispatched to address the situation.",
+        "The condition has been inspected and a work order was created."
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.7
+    },
+    {
+      "id": 9,
+      "type": "Range",
+      "label": "RANGE 80% ['A Park Enforcemen…','The condition has…']",
+      "values": [
+        "A Park Enforcement Patrol officer or Park Ranger has been notified and dispatched to address the situation.",
+        "The condition has been inspected and a work order was created."
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.8
+    },
+    {
+      "id": 10,
+      "type": "Range",
+      "label": "RANGE 90% ['A Park Enforcemen…','The condition has…']",
+      "values": [
+        "A Park Enforcement Patrol officer or Park Ranger has been notified and dispatched to address the situation.",
+        "The condition has been inspected and a work order was created."
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.9
+    }
+  ]
+}

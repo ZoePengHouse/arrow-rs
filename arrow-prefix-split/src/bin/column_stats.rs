@@ -43,7 +43,7 @@ use serde::{Deserialize, Serialize};
 // ── CLI ───────────────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-enum SortBy { Score, AvgLen, SuffixBytes, SkipFraction }
+enum SortBy { Score, AvgLen, SuffixBytes, SkipFraction, RangeScore }
 
 struct Config {
     benchmark_root: PathBuf,
@@ -52,6 +52,8 @@ struct Config {
     sort_by:        SortBy,
     min_avg_len:    f64,
     min_card:       f64,
+    /// In range mode: only keep columns where prefix_len/avg_len < this threshold.
+    max_prefix_ratio: f64,
     csv_out:        Option<PathBuf>,
     benchmarks_dir: PathBuf,
 }
@@ -71,24 +73,38 @@ fn parse_args() -> Config {
         std::process::exit(1);
     });
 
-    let sort_by = match flag_val(&args, "--sort").unwrap_or("score") {
-        "avg_len"      => SortBy::AvgLen,
-        "suffix_bytes" => SortBy::SuffixBytes,
-        "skip"         => SortBy::SkipFraction,
-        _              => SortBy::Score,
+    // --range-mode: optimise column selection and query generation for Range benchmarks.
+    //   Sorts by avg_len (longest strings benefit Range most), filters by prefix ratio,
+    //   and generates 10 Range queries at controlled selectivity levels.
+    let range_mode = has_flag(&args, "--range-mode");
+
+    let sort_by = if range_mode {
+        SortBy::RangeScore
+    } else {
+        match flag_val(&args, "--sort").unwrap_or("score") {
+            "avg_len"      => SortBy::AvgLen,
+            "suffix_bytes" => SortBy::SuffixBytes,
+            "skip"         => SortBy::SkipFraction,
+            "range"        => SortBy::RangeScore,
+            _              => SortBy::Score,
+        }
     };
 
+    // In range mode, default min_avg_len to 80 (short strings give SA little room to slow down).
+    // Default max_prefix_ratio to 0.30 (prefix must cover < 30% of string to leave room for savings).
+    let min_avg_len_default = if range_mode { 80.0 } else { 20.0 };
+    let max_prefix_ratio_default = if range_mode { 0.30 } else { 1.0 };
+
     Config {
-        benchmark_root: PathBuf::from(data).join("benchmark"),
-        use_samples:    has_flag(&args, "--use-samples"),
-        top_n:          flag_val(&args, "--top").and_then(|s| s.parse().ok()).unwrap_or(10),
+        benchmark_root:   PathBuf::from(data).join("benchmark"),
+        use_samples:      has_flag(&args, "--use-samples"),
+        top_n:            flag_val(&args, "--top").and_then(|s| s.parse().ok()).unwrap_or(10),
         sort_by,
-        min_avg_len:    flag_val(&args, "--min-len").and_then(|s| s.parse().ok()).unwrap_or(20.0),
-        min_card:       flag_val(&args, "--min-card").and_then(|s| s.parse().ok()).unwrap_or(0.0),
-        csv_out:        flag_val(&args, "--csv").map(PathBuf::from),
-        benchmarks_dir: PathBuf::from(
-            flag_val(&args, "--benchmarks-dir").unwrap_or("benchmarks")
-        ),
+        min_avg_len:      flag_val(&args, "--min-len").and_then(|s| s.parse().ok()).unwrap_or(min_avg_len_default),
+        min_card:         flag_val(&args, "--min-card").and_then(|s| s.parse().ok()).unwrap_or(0.0),
+        max_prefix_ratio: flag_val(&args, "--max-prefix-ratio").and_then(|s| s.parse().ok()).unwrap_or(max_prefix_ratio_default),
+        csv_out:          flag_val(&args, "--csv").map(PathBuf::from),
+        benchmarks_dir:   PathBuf::from(flag_val(&args, "--benchmarks-dir").unwrap_or("benchmarks")),
     }
 }
 
@@ -299,6 +315,10 @@ pub struct QueryDef {
     pub low_inc:    bool,
     #[serde(default)]
     pub high_inc:   bool,
+    /// For Range queries generated in --range-mode: the intended fraction of
+    /// rows this range should match (e.g. 0.20 = 20% selectivity target).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_selectivity: Option<f64>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -316,124 +336,55 @@ pub struct BenchmarkDef {
 
 // ── Query generation ──────────────────────────────────────────────────────────
 
-/// Generate exactly 10 filter queries from a sorted list of distinct values.
+/// Generate 10 Range queries at controlled selectivity levels.
 ///
-/// Mix:
-///   3 × EQ   — at 10 %, 50 %, 90 % of the distinct-value distribution
-///   1 × NE   — at 50 %
-///   3 × IN   — IN(2) at [20%,80%]; IN(3) at [10%,50%,90%]; IN(5) at spread
-///   3 × RANGE — narrow [25%,75%]; wide [10%,90%]; one-sided >= 50%
+/// Each query is a closed interval [lo, hi] centred at the median of the
+/// distinct-value distribution, expanding symmetrically:
+///
+///   Query 1:  ~5%  of values  →  lo = pick(0.475), hi = pick(0.525)
+///   Query 2: ~10%  of values  →  lo = pick(0.450), hi = pick(0.550)
+///   …
+///   Query 10: ~90% of values  →  lo = pick(0.050), hi = pick(0.950)
+///
+/// This lets the bench_runner plot speedup as a function of selectivity,
+/// which is the primary variable for Range-query PSA performance.
 fn generate_queries(distinct_sorted: &[String]) -> Vec<QueryDef> {
     let n = distinct_sorted.len();
-    if n == 0 { return vec![]; }
+    if n < 2 { return vec![]; }
 
-    // Pick a value at a fractional position in the sorted distinct list.
     let pick = |frac: f64| -> String {
         let idx = ((frac * (n - 1) as f64).round() as usize).min(n - 1);
         distinct_sorted[idx].clone()
     };
 
-    // Shorten a value for display in a label.
     let label_val = |v: &str| -> String {
-        if v.len() > 20 {
-            let end = v.char_indices().nth(19).map_or(v.len(), |(i, _)| i);
+        if v.len() > 18 {
+            let end = v.char_indices().nth(17).map_or(v.len(), |(i, _)| i);
             format!("{}…", &v[..end])
         } else {
             v.to_string()
         }
     };
 
-    let mut qs: Vec<QueryDef> = Vec::with_capacity(10);
+    // Selectivity levels: 5% through 90% in steps that give a clear curve.
+    let levels: &[f64] = &[0.05, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90];
 
-    // — EQ queries (3) —
-    for (i, frac) in [(1, 0.1f64), (2, 0.5), (3, 0.9)] {
-        let v = pick(frac);
-        qs.push(QueryDef {
-            id: i,
-            query_type: "Eq".into(),
-            label: format!("EQ '{}'", label_val(&v)),
-            values: vec![v],
-            low_inc: false, high_inc: false,
-        });
-    }
-
-    // — NE query (1) —
-    {
-        let v = pick(0.5);
-        qs.push(QueryDef {
-            id: 4,
-            query_type: "Ne".into(),
-            label: format!("NE '{}'", label_val(&v)),
-            values: vec![v],
-            low_inc: false, high_inc: false,
-        });
-    }
-
-    // — IN queries (3) —
-    {
-        let v0 = pick(0.2); let v1 = pick(0.8);
-        qs.push(QueryDef {
-            id: 5,
-            query_type: "In".into(),
-            label: format!("IN(2) '{}','{}'", label_val(&v0), label_val(&v1)),
-            values: vec![v0, v1],
-            low_inc: false, high_inc: false,
-        });
-    }
-    {
-        let v0 = pick(0.1); let v1 = pick(0.5); let v2 = pick(0.9);
-        qs.push(QueryDef {
-            id: 6,
-            query_type: "In".into(),
-            label: format!("IN(3) '{}',…", label_val(&v0)),
-            values: vec![v0, v1, v2],
-            low_inc: false, high_inc: false,
-        });
-    }
-    {
-        let vals: Vec<String> = [0.0f64, 0.25, 0.5, 0.75, 1.0].iter().map(|&f| pick(f)).collect();
-        qs.push(QueryDef {
-            id: 7,
-            query_type: "In".into(),
-            label: format!("IN(5) '{}',…", label_val(&vals[0])),
-            values: vals,
-            low_inc: false, high_inc: false,
-        });
-    }
-
-    // — RANGE queries (3) —
-    {
-        let lo = pick(0.25); let hi = pick(0.75);
-        qs.push(QueryDef {
-            id: 8,
+    levels.iter().enumerate().map(|(i, &s)| {
+        let lo_frac = (0.5 - s / 2.0).max(0.0);
+        let hi_frac = (0.5 + s / 2.0).min(1.0);
+        let lo = pick(lo_frac);
+        let hi = pick(hi_frac);
+        QueryDef {
+            id:         i + 1,
             query_type: "Range".into(),
-            label: format!("RANGE ['{}','{}']", label_val(&lo), label_val(&hi)),
-            values: vec![lo, hi],
-            low_inc: true, high_inc: true,
-        });
-    }
-    {
-        let lo = pick(0.1); let hi = pick(0.9);
-        qs.push(QueryDef {
-            id: 9,
-            query_type: "Range".into(),
-            label: format!("RANGE wide ['{}','{}']", label_val(&lo), label_val(&hi)),
-            values: vec![lo, hi],
-            low_inc: true, high_inc: true,
-        });
-    }
-    {
-        let lo = pick(0.5);
-        qs.push(QueryDef {
-            id: 10,
-            query_type: "Range".into(),
-            label: format!("RANGE >= '{}'", label_val(&lo)),
-            values: vec![lo, String::new()],
-            low_inc: true, high_inc: false,
-        });
-    }
-
-    qs
+            label:      format!("RANGE {:.0}% ['{}','{}']",
+                                s * 100.0, label_val(&lo), label_val(&hi)),
+            values:     vec![lo, hi],
+            low_inc:    true,
+            high_inc:   true,
+            target_selectivity: Some(s),
+        }
+    }).collect()
 }
 
 // ── Main scan ─────────────────────────────────────────────────────────────────
@@ -532,13 +483,22 @@ fn sort_key(s: &ColumnStat, by: SortBy) -> f64 {
         SortBy::AvgLen       => s.avg_len,
         SortBy::SuffixBytes  => s.suffix_bytes,
         SortBy::SkipFraction => s.skip_fraction,
+        // RangeScore: avg_len is the primary predictor of Range speedup because
+        // it controls how many bytes Arrow must compare for matching rows.
+        // Columns with long strings and low prefix_len/avg_len ratios benefit most.
+        SortBy::RangeScore   => s.avg_len,
     }
+}
+
+fn prefix_ratio(s: &ColumnStat) -> f64 {
+    if s.avg_len == 0.0 { 1.0 } else { s.prefix_len as f64 / s.avg_len }
 }
 
 fn filtered_top<'a>(stats: &'a [ColumnStat], cfg: &Config) -> Vec<&'a ColumnStat> {
     let mut filtered: Vec<&ColumnStat> = stats.iter()
         .filter(|s| s.avg_len >= cfg.min_avg_len)
         .filter(|s| s.skip_fraction >= cfg.min_card)
+        .filter(|s| prefix_ratio(s) <= cfg.max_prefix_ratio)
         .collect();
     filtered.sort_by(|a, b| {
         sort_key(b, cfg.sort_by).partial_cmp(&sort_key(a, cfg.sort_by)).unwrap()
@@ -554,6 +514,7 @@ fn print_top(stats: &[ColumnStat], cfg: &Config) {
         SortBy::AvgLen       => "avg length",
         SortBy::SuffixBytes  => "suffix bytes saved per skip",
         SortBy::SkipFraction => "skip fraction",
+        SortBy::RangeScore   => "avg_len (range-focused: longest strings benefit Range most)",
     };
 
     println!(
@@ -562,21 +523,22 @@ fn print_top(stats: &[ColumnStat], cfg: &Config) {
     );
     println!("Sort:    {sort_label}");
     println!(
-        "\n{:<4}  {:<14} {:<16} {:<22} {:>8} {:>6} {:>10} {:>8} {:>9} {:>8}",
+        "\n{:<4}  {:<14} {:<16} {:<22} {:>8} {:>6} {:>8} {:>10} {:>8} {:>9} {:>8}",
         "Rank", "Benchmark", "Table", "Column",
-        "AvgLen", "P_len", "SuffixSave", "Skip%", "Score", "Distinct"
+        "AvgLen", "P_len", "P/Len%", "SuffixSave", "Skip%", "Score", "Distinct"
     );
-    println!("{}", "-".repeat(113));
+    println!("{}", "-".repeat(122));
 
     for (rank, s) in filtered.iter().take(cfg.top_n).enumerate() {
         println!(
-            "{:<4}  {:<14} {:<16} {:<22} {:>8.1} {:>6} {:>10.1} {:>7.1}% {:>9.1} {:>8}",
+            "{:<4}  {:<14} {:<16} {:<22} {:>8.1} {:>6} {:>7.1}% {:>10.1} {:>7.1}% {:>9.1} {:>8}",
             rank + 1,
             truncate(&s.benchmark, 14),
             truncate(&s.table, 16),
             truncate(&s.column, 22),
             s.avg_len,
             s.prefix_len,
+            prefix_ratio(s) * 100.0,
             s.suffix_bytes,
             s.skip_fraction * 100.0,
             s.psa_score,
@@ -591,6 +553,7 @@ fn print_top(stats: &[ColumnStat], cfg: &Config) {
     println!("Column headers:");
     println!("  AvgLen     — average byte length of non-null values");
     println!("  P_len      — prefix_len PSA would choose (90% threshold)");
+    println!("  P/Len%     — prefix_len / avg_len: fraction of string used as prefix (lower = more Range benefit)");
     println!("  SuffixSave — avg_len - prefix_len: bytes skipped per eliminated row");
     println!("  Skip%      — (1 - 1/distinct) × 100: % of rows eliminated by prefix for a typical needle");
     println!("  Score      — SuffixSave × Skip%/100: expected bytes saved per row scanned");

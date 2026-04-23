@@ -54,6 +54,8 @@ struct QueryDef {
     low_inc:    bool,
     #[serde(default)]
     high_inc:   bool,
+    #[serde(default)]
+    target_selectivity: Option<f64>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -319,11 +321,19 @@ struct QueryResult {
     label:      String,
     query_type: String,
     matches:    usize,
+    /// Intended selectivity from query generation (e.g. 0.20 = 20%).
+    target_selectivity: f64,
+    /// Actual matches / total rows.
+    actual_selectivity: f64,
+    /// Fraction of rows whose prefix collides with either range bound —
+    /// these rows need suffix comparison even in PSA and cannot be classified
+    /// by prefix alone.  Only meaningful for Range queries.
+    boundary_collision_rate: f64,
     /// All timings stored in nanoseconds so sub-µs sample runs show real numbers.
     sa_ns:      u128,
     psa90_ns:   u128,
     psapl_ns:   u128,
-    psafx_ns:   u128,   // PSA with fixed prefix_len
+    psafx_ns:   u128,
 }
 
 impl QueryResult {
@@ -336,7 +346,6 @@ impl QueryResult {
     fn speedup_fx(&self) -> f64 {
         if self.psafx_ns == 0 { 1.0 } else { self.sa_ns as f64 / self.psafx_ns as f64 }
     }
-    /// Format a nanosecond value as "42 ns", "1.3 µs", "2.5 ms" automatically.
     fn fmt_time(ns: u128) -> String {
         if ns < 1_000 {
             format!("{} ns", ns)
@@ -346,6 +355,41 @@ impl QueryResult {
             format!("{:.2} ms", ns as f64 / 1_000_000.0)
         }
     }
+}
+
+// ── Boundary collision rate ───────────────────────────────────────────────────
+
+/// For a Range [lo, hi], count the fraction of non-null rows whose first
+/// `prefix_len` bytes exactly equal the lo-prefix or the hi-prefix.
+///
+/// These rows cannot be classified by prefix alone — PSA must fall back to
+/// full suffix comparison for them, so they are "boundary collision" rows.
+/// A high BCR means PSA's prefix filter is less effective for this query.
+fn boundary_collision_rate(
+    col: &[Option<String>],
+    lo: &str,
+    hi: &str,
+    prefix_len: usize,
+) -> f64 {
+    let p = prefix_len.max(1);
+    let lo_b  = lo.as_bytes();
+    let hi_b  = hi.as_bytes();
+    let lo_px = &lo_b[..lo_b.len().min(p)];
+    let hi_px = &hi_b[..hi_b.len().min(p)];
+
+    let non_null: Vec<&[u8]> = col.iter()
+        .filter_map(|v| v.as_deref())
+        .map(|v| v.as_bytes())
+        .collect();
+    let total = non_null.len();
+    if total == 0 { return 0.0; }
+
+    let boundary = non_null.iter().filter(|&&vb| {
+        let vp = &vb[..vb.len().min(p)];
+        vp == lo_px || (!hi.is_empty() && lo_px != hi_px && vp == hi_px)
+    }).count();
+
+    boundary as f64 / total as f64
 }
 
 // ── Core: run one benchmark def ───────────────────────────────────────────────
@@ -435,11 +479,28 @@ fn run_one(def: &BenchmarkDef, cfg: &Config)
             }
         };
 
+        let actual_sel = if nrows > 0 { matches as f64 / nrows as f64 } else { 0.0 };
+        let target_sel = q.target_selectivity.unwrap_or(actual_sel);
+
+        // Boundary collision rate: only meaningful for Range queries.
+        // Use PSA-PL's median prefix_len as the representative prefix length,
+        // since plateau detection tends to give the smallest (most realistic) prefix.
+        let bcr = if q.query_type == "Range" && !q.values.is_empty() {
+            let lo = q.values.get(0).map(String::as_str).unwrap_or("");
+            let hi = q.values.get(1).map(String::as_str).unwrap_or("");
+            boundary_collision_rate(&col, lo, hi, ppl.median.max(1))
+        } else {
+            0.0
+        };
+
         results.push(QueryResult {
             query_id:   q.id,
             label:      q.label.clone(),
             query_type: q.query_type.clone(),
             matches,
+            target_selectivity:      target_sel,
+            actual_selectivity:      actual_sel,
+            boundary_collision_rate: bcr,
             sa_ns:    t_sa.as_nanos(),
             psa90_ns: t_90.as_nanos(),
             psapl_ns: t_pl.as_nanos(),
@@ -546,60 +607,143 @@ fn print_benchmark_results(
         winspl, results.len(), avgpl,
         fixed_prefix, winsfx, results.len(), avgfx);
     println!("  (▲ faster than SA  ▼ slower than SA)");
+
+    // ── ASCII sparkline: speedup vs selectivity (Range queries only) ──────────
+    let range_results: Vec<&QueryResult> = results.iter()
+        .filter(|r| r.query_type == "Range")
+        .collect();
+
+    if range_results.len() >= 3 {
+        println!();
+        println!("  Speedup vs selectivity  (PSA-PL | bar scale: each █ ≈ 0.15x, 1.0x = {}):",
+            "━━━━━━━".repeat(1));
+        println!("  {:>5}  {:>7}  {:>5}  {:>6}  {}",
+            "target", "actual", "bcr", "speed", "");
+        println!("  {}", "─".repeat(72));
+
+        for r in &range_results {
+            let sp   = r.speedup_pl();
+            let mark = if sp > 1.05 { "▲" } else if sp < 0.95 { "▼" } else { " " };
+            // Bar: scale so 1.0x = 7 blocks, 3.0x = 20 blocks (clamped).
+            let bar_len = ((sp * 7.0).round() as usize).min(28);
+            let base_mark = if bar_len >= 7 { format!("{}│{}", "█".repeat(7), "█".repeat(bar_len - 7)) }
+                            else            { format!("{}│", "█".repeat(bar_len)) };
+            println!("  {:>4.0}%  {:>6.1}%  {:>4.1}%  {}{:.2}x  {}",
+                r.target_selectivity * 100.0,
+                r.actual_selectivity * 100.0,
+                r.boundary_collision_rate * 100.0,
+                mark, sp,
+                base_mark,
+            );
+        }
+        println!("        (1.0x baseline = ━━━━━━━│)");
+    }
 }
 
 fn print_global_summary(all: &[(BenchmarkDef, Vec<QueryResult>)], fixed_prefix: usize) {
     if all.is_empty() { return; }
 
-    let total_queries: usize = all.iter().map(|(_, rs)| rs.len()).sum();
-    let wins90: usize = all.iter().flat_map(|(_, rs)| rs).filter(|r| r.psa90_ns < r.sa_ns).count();
-    let winspl: usize = all.iter().flat_map(|(_, rs)| rs).filter(|r| r.psapl_ns < r.sa_ns).count();
-    let winsfx: usize = all.iter().flat_map(|(_, rs)| rs).filter(|r| r.psafx_ns < r.sa_ns).count();
-    let avg90:  f64   = all.iter().flat_map(|(_, rs)| rs).map(|r| r.speedup_90()).sum::<f64>() / total_queries as f64;
-    let avgpl:  f64   = all.iter().flat_map(|(_, rs)| rs).map(|r| r.speedup_pl()).sum::<f64>() / total_queries as f64;
-    let avgfx:  f64   = all.iter().flat_map(|(_, rs)| rs).map(|r| r.speedup_fx()).sum::<f64>() / total_queries as f64;
+    let all_results: Vec<&QueryResult> = all.iter().flat_map(|(_, rs)| rs).collect();
+    let total_queries = all_results.len();
 
-    // Per-type breakdown.
-    let by_type = |qt: &str| -> (usize, usize, f64, usize, f64, usize, f64) {
-        let qs: Vec<&QueryResult> = all.iter().flat_map(|(_, rs)| rs)
-            .filter(|r| r.query_type == qt).collect();
-        let n = qs.len();
-        if n == 0 { return (0,0,0.0,0,0.0,0,0.0); }
-        let w90 = qs.iter().filter(|r| r.psa90_ns < r.sa_ns).count();
-        let wpl = qs.iter().filter(|r| r.psapl_ns < r.sa_ns).count();
-        let wfx = qs.iter().filter(|r| r.psafx_ns < r.sa_ns).count();
-        let a90 = qs.iter().map(|r| r.speedup_90()).sum::<f64>() / n as f64;
-        let apl = qs.iter().map(|r| r.speedup_pl()).sum::<f64>() / n as f64;
-        let afx = qs.iter().map(|r| r.speedup_fx()).sum::<f64>() / n as f64;
-        (n, w90, a90, wpl, apl, wfx, afx)
+    let avg = |rs: &[&QueryResult], f: fn(&QueryResult) -> f64| -> f64 {
+        if rs.is_empty() { return 0.0; }
+        rs.iter().map(|r| f(r)).sum::<f64>() / rs.len() as f64
     };
-
-    let fx_hdr = format!("fix{}-wins", fixed_prefix);
-    let fx_avg = format!("fix{}-avg", fixed_prefix);
+    let wins = |rs: &[&QueryResult], psa_ns: fn(&QueryResult) -> u128| -> usize {
+        rs.iter().filter(|r| psa_ns(r) < r.sa_ns).count()
+    };
 
     println!();
     println!("{}", "═".repeat(96));
     println!("  GLOBAL SUMMARY  —  {} benchmarks · {} queries total", all.len(), total_queries);
     println!("{}", "═".repeat(96));
-    println!();
-    println!("  {:<8}  {:>7}  {:>9}  {:>8}  {:>8}  {:>8}  {:>10}  {:>9}",
-        "Type", "Queries", "90%-wins", "90%-avg", "PL-wins", "PL-avg", &fx_hdr, &fx_avg);
-    println!("  {}", "─".repeat(80));
 
-    for qt in &["Eq", "Ne", "In", "Range"] {
-        let (n, w90, a90, wpl, apl, wfx, afx) = by_type(qt);
-        if n == 0 { continue; }
-        println!("  {:<8}  {:>7}  {:>9}  {:>7.2}x  {:>8}  {:>7.2}x  {:>10}  {:>8.2}x",
-            qt, n, w90, a90, wpl, apl, wfx, afx);
+    // ── By selectivity level (Range-focused view) ─────────────────────────────
+    let range_results: Vec<&QueryResult> = all_results.iter()
+        .copied()
+        .filter(|r| r.query_type == "Range")
+        .collect();
+
+    if !range_results.is_empty() {
+        println!();
+        println!("  Range speedup by target selectivity (PSA-PL | avg across all benchmarks):");
+        println!("  {:>7}  {:>8}  {:>8}  {:>8}  {:>6}  {}",
+            "target", "PL-avg", "90%-avg", "fix-avg", "bcr", "PSA-PL bar");
+        println!("  {}", "─".repeat(72));
+
+        // Group by target_selectivity rounded to nearest 5%.
+        // Collect unique selectivity levels as ordered integers (×100 to avoid float hash).
+        let mut level_set: Vec<i64> = range_results.iter()
+            .map(|r| (r.target_selectivity * 2000.0).round() as i64)
+            .collect::<std::collections::HashSet<_>>()
+            .into_iter()
+            .collect();
+        level_set.sort();
+        let mut levels: Vec<f64> = level_set.iter().map(|&v| v as f64 / 2000.0).collect();
+        levels.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+        for &lvl in &levels {
+            let bucket: Vec<&QueryResult> = range_results.iter()
+                .copied()
+                .filter(|r| ((r.target_selectivity * 20.0).round() / 20.0 - lvl).abs() < 0.001)
+                .collect();
+            if bucket.is_empty() { continue; }
+
+            let apl  = avg(&bucket, QueryResult::speedup_pl);
+            let a90  = avg(&bucket, QueryResult::speedup_90);
+            let afx  = avg(&bucket, QueryResult::speedup_fx);
+            let abcr = avg(&bucket, |r| r.boundary_collision_rate);
+
+            let mark  = if apl > 1.05 { "▲" } else if apl < 0.95 { "▼" } else { " " };
+            let bar_len = ((apl * 7.0).round() as usize).min(28);
+            let base_mark = if bar_len >= 7 {
+                format!("{}│{}", "█".repeat(7), "█".repeat(bar_len - 7))
+            } else {
+                format!("{}│", "█".repeat(bar_len))
+            };
+
+            println!("  {:>5.0}%  {}{:.2}x  {:>7.2}x  {:>7.2}x  {:>5.1}%  {}",
+                lvl * 100.0, mark, apl, a90, afx, abcr * 100.0, base_mark);
+        }
+        println!("         (1.0x baseline = ━━━━━━━│)");
     }
 
-    println!("  {}", "─".repeat(80));
-    println!("  {:<8}  {:>7}  {:>9}  {:>7.2}x  {:>8}  {:>7.2}x  {:>10}  {:>8.2}x",
-        "TOTAL", total_queries, wins90, avg90, winspl, avgpl, winsfx, avgfx);
+    // ── Overall totals ────────────────────────────────────────────────────────
+    println!();
+    println!("  {:<10}  {:>7}  {:>8}  {:>7}  {:>8}  {:>7}  {:>8}",
+        "Type", "Queries", "90%-avg", "PL-avg",
+        format!("fix{}-avg", fixed_prefix), "90%-wins", "PL-wins");
+    println!("  {}", "─".repeat(72));
+
+    for qt in &["Eq", "Ne", "In", "Range"] {
+        let qs: Vec<&QueryResult> = all_results.iter().copied()
+            .filter(|r| r.query_type == *qt).collect();
+        if qs.is_empty() { continue; }
+        let n = qs.len();
+        println!("  {:<10}  {:>7}  {:>7.2}x  {:>6.2}x  {:>7.2}x  {:>8}  {:>7}",
+            qt, n,
+            avg(&qs, QueryResult::speedup_90),
+            avg(&qs, QueryResult::speedup_pl),
+            avg(&qs, QueryResult::speedup_fx),
+            wins(&qs, |r| r.psa90_ns),
+            wins(&qs, |r| r.psapl_ns),
+        );
+    }
+
+    println!("  {}", "─".repeat(72));
+    println!("  {:<10}  {:>7}  {:>7.2}x  {:>6.2}x  {:>7.2}x  {:>8}  {:>7}",
+        "TOTAL", total_queries,
+        avg(&all_results, QueryResult::speedup_90),
+        avg(&all_results, QueryResult::speedup_pl),
+        avg(&all_results, QueryResult::speedup_fx),
+        wins(&all_results, |r| r.psa90_ns),
+        wins(&all_results, |r| r.psapl_ns),
+    );
     println!();
     println!("{}", "═".repeat(96));
     println!();
-    println!("  Speedup = SA_time / PSA_time.  >1.0x = PSA faster.  <1.0x = PSA has overhead.");
+    println!("  Speedup = SA_time / PSA_time.  >1.0x = PSA faster.  <1.0x = PSA slower.");
     println!();
 }
 
@@ -610,18 +754,20 @@ fn write_csv(all: &[(BenchmarkDef, Vec<QueryResult>)], path: &Path) -> std::io::
     let mut out = String::new();
     writeln!(out,
         "rank,benchmark,table,column,col_idx,avg_len,prefix_len,psa_score,\
-         query_id,query_type,label,matches,sa_ns,psa90_ns,psapl_ns,psafx_ns,\
+         query_id,query_type,label,target_sel,actual_sel,bcr,matches,\
+         sa_ns,psa90_ns,psapl_ns,psafx_ns,\
          speedup_90,speedup_pl,speedup_fx"
     ).unwrap();
     for (def, results) in all {
         for r in results {
             writeln!(out,
-                "{},{},{},{},{},{:.1},{},{:.1},{},{},{},{},{},{},{},{},{:.4},{:.4},{:.4}",
+                "{},{},{},{},{},{:.1},{},{:.1},{},{},{},{:.4},{:.4},{:.4},{},{},{},{},{},{:.4},{:.4},{:.4}",
                 def.rank, def.benchmark, def.table,
                 csv_escape(&def.column), def.col_idx,
                 def.avg_len, def.prefix_len, def.psa_score,
                 r.query_id, r.query_type,
                 csv_escape(&r.label),
+                r.target_selectivity, r.actual_selectivity, r.boundary_collision_rate,
                 r.matches, r.sa_ns, r.psa90_ns, r.psapl_ns, r.psafx_ns,
                 r.speedup_90(), r.speedup_pl(), r.speedup_fx(),
             ).unwrap();

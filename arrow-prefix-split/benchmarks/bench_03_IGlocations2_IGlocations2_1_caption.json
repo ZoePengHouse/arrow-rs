@@ -1,0 +1,132 @@
+{
+  "rank": 3,
+  "benchmark": "IGlocations2",
+  "table": "IGlocations2_1",
+  "column": "caption",
+  "col_idx": 1,
+  "avg_len": 154.7,
+  "prefix_len": 3,
+  "psa_score": 142.2,
+  "queries": [
+    {
+      "id": 1,
+      "type": "Range",
+      "label": "RANGE 5% ['Even though I've …','Growing up on the…']",
+      "values": [
+        "Even though I've moved to #Alabama I still love my #colts #gocolts #playoffs #istilllovepeytontho 🏈🏈🏈",
+        "Growing up on these waters, I can tell you, THIS is NOT the time to be sailing! #dauphinislandregatta #alabama #sailing #gulfofmexico #tragic #MobileAL"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.05
+    },
+    {
+      "id": 2,
+      "type": "Range",
+      "label": "RANGE 10% ['Even though I've …','Growing up on the…']",
+      "values": [
+        "Even though I've moved to #Alabama I still love my #colts #gocolts #playoffs #istilllovepeytontho 🏈🏈🏈",
+        "Growing up on these waters, I can tell you, THIS is NOT the time to be sailing! #dauphinislandregatta #alabama #sailing #gulfofmexico #tragic #MobileAL"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.1
+    },
+    {
+      "id": 3,
+      "type": "Range",
+      "label": "RANGE 20% ['Don't remember sh…','Made with @nocrop…']",
+      "values": [
+        "Don't remember shooting this photo... #Hipstamatic #Hornbecker #US1776 #dollargeneral #? #countrystore #lax #bnw #black #white #blackandwhite #picturedixie #alabama #rural #rsa_rural #explorehuntsville #trb_rural #love #home #latenight #hipstamatic #colorless #hankhill #sweetnothings #foofighters",
+        "Made with @nocrop_rc #rcnocrop #Besties #Sis #10yearsstrong #Ace #Florida #Orlando #Alabama #ATL #Huntsville #OUAlumni #AlumniWeekend"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.2
+    },
+    {
+      "id": 4,
+      "type": "Range",
+      "label": "RANGE 30% ['And suddenly the …','Made with @nocrop…']",
+      "values": [
+        "And suddenly the day made sense....#Aunties #SweetPotato #Cake #CreamCheeseFrosting #Naptime #AllergiesOn10 #Alabama #AlumniWeekend",
+        "Made with @nocrop_rc #rcnocrop smh this lil girl #Alabama #Huntsville #Chillin with the #Parental unit #MomNPop #Grandma #Grandpa #FamilyTime"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.3
+    },
+    {
+      "id": 5,
+      "type": "Range",
+      "label": "RANGE 40% ['And suddenly the …','That after work a…']",
+      "values": [
+        "And suddenly the day made sense....#Aunties #SweetPotato #Cake #CreamCheeseFrosting #Naptime #AllergiesOn10 #Alabama #AlumniWeekend",
+        "That after work after surf beer! #Alabama #gulfcoast #PBR"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.4
+    },
+    {
+      "id": 6,
+      "type": "Range",
+      "label": "RANGE 50% ['#shrimpboat #Alab…','That after work a…']",
+      "values": [
+        "#shrimpboat #Alabama #seafood #GulfCoast #Beach",
+        "That after work after surf beer! #Alabama #gulfcoast #PBR"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.5
+    },
+    {
+      "id": 7,
+      "type": "Range",
+      "label": "RANGE 60% ['#happyfriday what…','The littlest chai…']",
+      "values": [
+        "#happyfriday what shall I get into this weekend.....?!?!? #huntsville #alabama is sooooooooo slow!! #wherethepartyat ⁉️⁉️",
+        "The littlest chair. #pink #umbrella #DauphinIsland #AlabamaBeaches #Beach #BeachDay #BeachChair #sand #water #shore #StPatricksDay #cute #love #happy #smile #relax"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.6
+    },
+    {
+      "id": 8,
+      "type": "Range",
+      "label": "RANGE 70% ['#earlymorning #Be…','Yum!!! #Fruit #Ap…']",
+      "values": [
+        "#earlymorning #Beach #sunrise #Alabama #Beach #walkingonthebeach #Eddie #puppylove #dogslife",
+        "Yum!!! #Fruit #Apples #Strawberries #FoodPorn #FruitPorn #Alabama #Snack after stuffing my face 😁😁😁🍎🍎🍓🍓"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.7
+    },
+    {
+      "id": 9,
+      "type": "Range",
+      "label": "RANGE 80% ['#Earlier #ChurchH…','~Its true there's…']",
+      "values": [
+        "#Earlier #ChurchHopped #Alabama #Huntsville #Madison #Harvest #Downtime #What2DoTonight #SaturdayNight #MischievousFace #ButNotReally 😒😒😋👀⌚",
+        "~Its true there's plenty of other fish in the sea, but why would you want a fish if you have a Mermaid~ @killa_kiley #Sun #Swim #Summer #Saltlife #Life #Live #Love #Laugh #livelokai #Mermaid #Moments #Free #Family #Friend #Beach #Bestie #Beachhouse #Alabama #Oceanlife #Ocean #Stayhereforever #Easter #Weekend"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.8
+    },
+    {
+      "id": 10,
+      "type": "Range",
+      "label": "RANGE 90% ['#Earlier #ChurchH…','~Its true there's…']",
+      "values": [
+        "#Earlier #ChurchHopped #Alabama #Huntsville #Madison #Harvest #Downtime #What2DoTonight #SaturdayNight #MischievousFace #ButNotReally 😒😒😋👀⌚",
+        "~Its true there's plenty of other fish in the sea, but why would you want a fish if you have a Mermaid~ @killa_kiley #Sun #Swim #Summer #Saltlife #Life #Live #Love #Laugh #livelokai #Mermaid #Moments #Free #Family #Friend #Beach #Bestie #Beachhouse #Alabama #Oceanlife #Ocean #Stayhereforever #Easter #Weekend"
+      ],
+      "low_inc": true,
+      "high_inc": true,
+      "target_selectivity": 0.9
+    }
+  ]
+}
